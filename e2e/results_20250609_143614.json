@@ -1,0 +1,35 @@
+[
+  {
+    "trial": "unknown_task_0",
+    "scene": "scene_0",
+    "type": "failed",
+    "repeat_idx": 0,
+    "goal_instr": "Task processing failed with exception",
+    "inferred_steps": [
+      "ERROR: ValueError(\"Asking to pad but the tokenizer does not have a padding token. Please select a token to use as `pad_token` `(tokenizer.pad_token = tokenizer.eos_token e.g.)` or add a new pad token via `tokenizer.add_special_tokens({'pad_token': '[PAD]'})`.\")"
+    ],
+    "success": false
+  },
+  {
+    "trial": "unknown_task_1",
+    "scene": "scene_1",
+    "type": "failed",
+    "repeat_idx": 1,
+    "goal_instr": "Task processing failed with exception",
+    "inferred_steps": [
+      "ERROR: ValueError(\"Asking to pad but the tokenizer does not have a padding token. Please select a token to use as `pad_token` `(tokenizer.pad_token = tokenizer.eos_token e.g.)` or add a new pad token via `tokenizer.add_special_tokens({'pad_token': '[PAD]'})`.\")"
+    ],
+    "success": false
+  },
+  {
+    "trial": "unknown_task_2",
+    "scene": "scene_2",
+    "type": "failed",
+    "repeat_idx": 2,
+    "goal_instr": "Task processing failed with exception",
+    "inferred_steps": [
+      "ERROR: ValueError(\"Asking to pad but the tokenizer does not have a padding token. Please select a token to use as `pad_token` `(tokenizer.pad_token = tokenizer.eos_token e.g.)` or add a new pad token via `tokenizer.add_special_tokens({'pad_token': '[PAD]'})`.\")"
+    ],
+    "success": false
+  }
+]

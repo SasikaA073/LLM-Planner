@@ -1,0 +1,31 @@
+2025-06-06 23:21:21 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cuda
+2025-06-06 23:21:21 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: paraphrase-MiniLM-L6-v2
+2025-06-06 23:21:21 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): huggingface.co:443
+2025-06-06 23:21:21 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/paraphrase-MiniLM-L6-v2/resolve/main/modules.json HTTP/11" 200 0
+2025-06-06 23:21:22 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/paraphrase-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json HTTP/11" 200 0
+2025-06-06 23:21:22 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/paraphrase-MiniLM-L6-v2/resolve/main/README.md HTTP/11" 200 0
+2025-06-06 23:21:22 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/paraphrase-MiniLM-L6-v2/resolve/main/modules.json HTTP/11" 200 0
+2025-06-06 23:21:22 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/paraphrase-MiniLM-L6-v2/resolve/main/sentence_bert_config.json HTTP/11" 200 0
+2025-06-06 23:21:23 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/paraphrase-MiniLM-L6-v2/resolve/main/config.json HTTP/11" 200 0
+2025-06-06 23:21:23 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/paraphrase-MiniLM-L6-v2/resolve/main/tokenizer_config.json HTTP/11" 200 0
+2025-06-06 23:21:23 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "GET /api/models/sentence-transformers/paraphrase-MiniLM-L6-v2/revision/main HTTP/11" 200 4071
+2025-06-06 23:21:24 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "GET /api/models/sentence-transformers/paraphrase-MiniLM-L6-v2 HTTP/11" 200 4071
+2025-06-06 23:21:24 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /gpt2/resolve/main/tokenizer_config.json HTTP/11" 200 0
+2025-06-06 23:21:24 - alfred.thor_connector - DEBUG - Initializing ThorConnector
+xdpyinfo:  unable to open display ":0".
+Traceback (most recent call last):
+  File "src/run_eval.py", line 726, in <module>
+    main()
+  File "src/run_eval.py", line 701, in main
+    evaluator = AlfredEvaluator(args.config)
+  File "src/run_eval.py", line 68, in __init__
+    self.env = ThorConnector(x_display=self.config["alfred"]["x_display"])
+  File "/data/dulangaw/LLM-planner/LLM-Planner/e2e/src/alfred/thor_connector.py", line 40, in __init__
+    super().__init__(x_display, player_screen_height, player_screen_width, quality, build_path)
+  File "/data/dulangaw/LLM-planner/LLM-Planner/e2e/./alfred/env/thor_env.py", line 31, in __init__
+    self.start(x_display=x_display,
+  File "/home/smartt1/miniconda3/envs/llm-planner/lib/python3.8/site-packages/ai2thor/controller.py", line 855, in start
+    self.check_x_display(env['DISPLAY'])
+  File "/home/smartt1/miniconda3/envs/llm-planner/lib/python3.8/site-packages/ai2thor/controller.py", line 714, in check_x_display
+    assert subprocess.call("xdpyinfo", stdout=dn, env=env, shell=True) == 0, \
+AssertionError: Invalid DISPLAY :0 - cannot find X server with xdpyinfo

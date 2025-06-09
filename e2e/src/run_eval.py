@@ -26,6 +26,11 @@ import logging
 import textwrap
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.util import cos_sim
+import torch
+from io import BytesIO
+from transformers import MllamaForConditionalGeneration, AutoProcessor
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import gc
 
 from alfred.thor_connector import ThorConnector
 from alfred.utils import dotdict, load_task_json
@@ -50,33 +55,83 @@ logging.getLogger("httpx").setLevel(logging.ERROR)
 
 class AlfredEvaluator:
     def __init__(self, config_file):
+        print("🚀 Initializing ALFRED Evaluator...")
+        
         # Load configuration
+        print("📝 Loading configuration file...")
         with open(config_file) as reader:
             self.config = yaml.safe_load(reader)
+        print(f"✅ Configuration loaded! Engine: {self.config['llm_planner']['engine']}")
         
         # Initialize OpenAI client
         self.client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
         
         # Initialize LLM planner
+        print("🧠 Initializing LLM planner...")
         self.llm_planner = LLM_Planner(
             knn_data_path=self.config["llm_planner"]["knn_dataset_path"], 
             emb_model_name=self.config["llm_planner"]["emb_model_name"], 
             debug=self.config["llm_planner"]["debug"]
         )
+        print("✅ LLM planner initialized!")
         
         # Initialize environment
+        print("🏠 Initializing THOR environment...")
         self.env = ThorConnector(x_display=self.config["alfred"]["x_display"])
+        print("✅ Environment initialized!")
         
         # Load task splits
+        print("📋 Loading task splits...")
         with open(self.config["alfred"]["splits"]) as f:
             self.splits = json.load(f)
+        print("✅ Task splits loaded!")
             
         # Prepare tasks
+        print("⚙️ Preparing tasks...")
         self.tasks = self._prepare_tasks()
+        print(f"✅ {len(self.tasks)} tasks prepared!")
         
         # Initialize the sentence transformer for object name matching
+        print("🔍 Initializing sentence transformer for object matching...")
         self.obj_encoder = SentenceTransformer(self.config["llm_planner"]["emb_model_name"])
         self.obj_sim_threshold = self.config["llm_planner"].get("obj_sim_threshold", 0.8)  # Default similarity threshold
+        print("✅ Sentence transformer ready!")
+        
+        # Initialize Llama model if specified in config
+        if self.config["llm_planner"]["engine"] == "llama-3-vision":
+            print("🦙 Initializing Llama-3 Vision model...")
+            model_id = "meta-llama/Llama-3.2-11B-Vision-Instruct"
+            print(f"📥 Loading model: {model_id}")
+            self.llama_model = MllamaForConditionalGeneration.from_pretrained(
+                model_id,
+                torch_dtype=torch.float16,
+                device_map="cuda",  # Changed from "cpu" to "auto" for better performance
+            )
+            print("📥 Loading processor...")
+            self.llama_processor = AutoProcessor.from_pretrained(model_id)
+            print("✅ Llama-3 Vision model ready!")
+
+        # Initialize Mistral model if specified in config
+        if self.config["llm_planner"]["engine"] == "mistral-7b-instruct":
+            print(" Intializing Mistral-7B-Instruct model...")
+            model_id = "mistralai/Mistral-7B-Instruct-v0.2"
+            print(f"📥 Loading model: {model_id}")
+
+            self.mistral_model = AutoModelForCausalLM.from_pretrained(
+                model_id, 
+                torch_dtype=torch.float16,
+                device_map="cuda",
+            )
+            print("📥 Loading processor...")
+            self.mistral_tokenizer = AutoTokenizer.from_pretrained(model_id)
+            print("✅ Mistral-7B-Instruct model ready!")
+
+        else:
+            self.llama_model = None
+            self.llama_processor = None
+            print("💡 Using OpenAI models - no local model loading needed!")
+        
+        print("🎉 ALFRED Evaluator initialization complete!")
         
     def _prepare_tasks(self):
         """Prepare tasks for evaluation"""
@@ -100,13 +155,16 @@ class AlfredEvaluator:
     
     def llm(self, prompt, engine, images=None, stop=["\n"]):
         """Interface to LLM models"""
+        print(f"🤖 LLM call started with engine: {engine}")
 
         if engine == 'gpt-4o-mini' or engine == 'gpt-4o':
+            print("🔄 Using OpenAI API...")
             # Create the base message content
             message_content = []
             
             # Add image if provided
             if images and len(images) > 0:
+                print("🖼️ Adding image to OpenAI request...")
                 message_content.append({
                     "type": "image_url",
                     "image_url": {
@@ -121,6 +179,7 @@ class AlfredEvaluator:
             })
             
             # Make the API call
+            print("📡 Making OpenAI API call...")
             response = self.client.chat.completions.create(
                 model=engine,
                 messages=[
@@ -132,8 +191,109 @@ class AlfredEvaluator:
                 max_tokens=300,
                 temperature=0.0
             )
+            print("✅ OpenAI response received!")
             return response.choices[0].message.content
+        
+        elif engine == "llama-3-vision":
+            print("🦙 Using Llama-3 Vision model...")
+            # Convert base64 image back to PIL Image if provided
+            image = None
+            if images and len(images) > 0:
+                print("🖼️ Converting base64 image to PIL...")
+                image_data = base64.b64decode(images[0])
+                image = Image.open(BytesIO(image_data))
+                print(f"✅ Image loaded: {image.size}")
+            else:
+                print("📝 No image provided - text-only mode")
+            
+            # Format messages for Llama
+            print("💬 Formatting messages for Llama...")
+            messages = [
+                {"role": "user", "content": [
+                    {"type": "image"} if image else {},
+                    {"type": "text", "text": prompt}
+                ]}
+            ]
+            
+            # Remove empty image content if no image provided
+            if not image:
+                messages[0]["content"] = [{"type": "text", "text": prompt}]
+            
+            # Generate response
+            print("⚡ Generating response with Llama model...")
+            with torch.no_grad():
+                print("🔄 Applying chat template...")
+                input_text = self.llama_processor.apply_chat_template(messages, add_generation_prompt=True)
+                print("🔄 Processing inputs...")
+                inputs = self.llama_processor(
+                    image,
+                    input_text,
+                    add_special_tokens=False,
+                    return_tensors="pt"
+                ).to(self.llama_model.device)
+                
+                print("🎯 Generating text...")
+                output = self.llama_model.generate(**inputs, max_new_tokens=300, 
+                                                   temperature=1.0,
+                                                   do_sample=False # <- important for greedy decoding
+                )
+                # Decode only the new tokens (skip the input)
+                print("📝 Decoding response...")
+                generated_text = self.llama_processor.decode(output[0][inputs['input_ids'].shape[1]:], skip_special_tokens=True)
+                print("✅ Llama response generated!")
+                return generated_text.strip()
+        
+        elif engine == "mistral-7b-instruct":
+            print("🦙 Using Mistral-7B-Instruct model...")
+
+            # Mistral is a text-only model — image input will be ignored
+            if images and len(images) > 0:
+                print("📝 Images provided, but Mistral-7B-Instruct only supports text. Proceeding in text-only mode.")
+            else:
+                print("📝 No image provided - proceeding in text-only mode.")
+
+            # Prepare messages in plain string format
+            print("💬 Formatting messages for Mistral...")
+            messages = [
+                {"role": "user", "content": prompt}
+            ]
+
+            # Ensure pad_token is set
+            if self.mistral_tokenizer.pad_token is None:
+                print("⚠️ Setting pad_token to eos_token")
+                self.mistral_tokenizer.pad_token = self.mistral_tokenizer.eos_token
+
+
+            # Generate response
+            print("⚡ Generating response with Mistral model...")
+            with torch.no_grad():
+                print("🔄 Applying chat template...")
+                inputs = self.mistral_tokenizer.apply_chat_template(
+                    messages,
+                    return_tensors="pt",
+                    padding=True,
+                    add_generation_prompt=True
+                ).to(self.mistral_model.device)
+
+                print("🎯 Generating text...")
+                generated_ids = self.mistral_model.generate(
+                    inputs,
+                    pad_token_id=self.mistral_tokenizer.eos_token_id,
+                    max_new_tokens=512,         # Reduce if OOM occurs
+                    do_sample=False,
+                    temperature=0.7,
+                    top_p=0.95
+                )
+
+                print("📝 Decoding response...")
+                decoded_output = self.mistral_tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
+
+                print("✅ Mistral response generated!")
+                return decoded_output[0].strip()
+
+        
         else:
+            print(f"❌ Engine {engine} is not supported!")
             raise ValueError(f"{engine} is not supported!")
 
     def encode_image(self, img):
@@ -692,22 +852,32 @@ class AlfredEvaluator:
             return None, 0
 
 def main():
+    print("🎬 Starting ALFRED Evaluation Script...")
+    
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default='config/config_alfred.yaml')
     parser.add_argument('--dry_run', action='store_true')
     args = parser.parse_args()
+    
+    print(f"📁 Using config file: {args.config}")
+    if args.dry_run:
+        print("🧪 Running in DRY RUN mode (limited tasks)")
 
     # Initialize evaluator
+    print("🔧 Creating evaluator instance...")
     evaluator = AlfredEvaluator(args.config)
     
     # Run preprocess step only once on new installation
+    print("⚙️ Checking dataset preprocessing...")
     evaluator.preprocess_dataset()
     
     # Run evaluation
+    print("🏃 Starting task evaluation...")
     results = evaluator.run_evaluation(dry_run=args.dry_run)
     
     # Save results if configured
     if evaluator.config.get("save_results", False):
+        print("💾 Saving results to file...")
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         result_file = os.path.join(evaluator.config["out_dir"], f"results_{timestamp}.json")
         
@@ -720,7 +890,9 @@ def main():
             
         with open(result_file, 'w') as f:
             json.dump(json_results, f, indent=2)
-        log.info(f"Results saved to {result_file}")
+        print(f"✅ Results saved to {result_file}")
+    
+    print("🏁 Evaluation complete!")
 
 if __name__ == '__main__':
     main()

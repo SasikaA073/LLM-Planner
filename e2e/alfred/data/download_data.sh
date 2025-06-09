@@ -2,8 +2,9 @@
 
 # Install 7z
 echo "Checking for 7z (might require installation)..."
-
+pwd
 if apt-get install p7zip-full -y; then
+
     echo "7z found/installed"
 else
     echo "Failed: Please install 7z (https://www.7-zip.org/7z.html)"

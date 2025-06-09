@@ -1,0 +1,447 @@
+f2025-06-09 09:36:23 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cuda
+2025-06-09 09:36:23 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: paraphrase-MiniLM-L6-v2
+2025-06-09 09:36:23 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): huggingface.co:443
+2025-06-09 09:36:24 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/paraphrase-MiniLM-L6-v2/resolve/main/modules.json HTTP/11" 200 0
+2025-06-09 09:36:24 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/paraphrase-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json HTTP/11" 200 0
+2025-06-09 09:36:24 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/paraphrase-MiniLM-L6-v2/resolve/main/README.md HTTP/11" 200 0
+2025-06-09 09:36:24 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/paraphrase-MiniLM-L6-v2/resolve/main/modules.json HTTP/11" 200 0
+2025-06-09 09:36:25 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/paraphrase-MiniLM-L6-v2/resolve/main/sentence_bert_config.json HTTP/11" 200 0
+2025-06-09 09:36:25 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/paraphrase-MiniLM-L6-v2/resolve/main/config.json HTTP/11" 200 0
+2025-06-09 09:36:25 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/paraphrase-MiniLM-L6-v2/resolve/main/tokenizer_config.json HTTP/11" 200 0
+2025-06-09 09:36:25 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "GET /api/models/sentence-transformers/paraphrase-MiniLM-L6-v2/revision/main HTTP/11" 200 4102
+2025-06-09 09:36:26 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "GET /api/models/sentence-transformers/paraphrase-MiniLM-L6-v2 HTTP/11" 200 4102
+2025-06-09 09:36:26 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /gpt2/resolve/main/tokenizer_config.json HTTP/11" 200 0
+2025-06-09 09:36:26 - alfred.thor_connector - DEBUG - Initializing ThorConnector
+2025-06-09 09:36:26 - ai2thor.controller - DEBUG - /home/smartt1/.ai2thor/releases/thor-201909061227-Linux64/thor-201909061227-Linux64 exists - skipping download
+Found path: /home/smartt1/.ai2thor/releases/thor-201909061227-Linux64/thor-201909061227-Linux64
+Mono path[0] = '/home/smartt1/.ai2thor/releases/thor-201909061227-Linux64/thor-201909061227-Linux64_Data/Managed'
+Mono config path = '/home/smartt1/.ai2thor/releases/thor-201909061227-Linux64/thor-201909061227-Linux64_Data/Mono/etc'
+Preloaded 'ScreenSelector.so'
+Display 0 'DELL E2417H 24"': 1920x1080 (primary device).
+Display 1 'DELL U2312HM 23"': 1920x1080 (secondary device).
+Logging to /home/smartt1/.config/unity3d/Allen Institute for Artificial Intelligence/AI2-Thor/Player.log
+2025-06-09 09:36:30 - alfred.thor_connector - DEBUG - ThorConnector initialized
+2025-06-09 09:36:30 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cuda
+2025-06-09 09:36:30 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: paraphrase-MiniLM-L6-v2
+2025-06-09 09:36:30 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/paraphrase-MiniLM-L6-v2/resolve/main/modules.json HTTP/11" 200 0
+2025-06-09 09:36:30 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/paraphrase-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json HTTP/11" 200 0
+2025-06-09 09:36:30 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/paraphrase-MiniLM-L6-v2/resolve/main/README.md HTTP/11" 200 0
+2025-06-09 09:36:31 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/paraphrase-MiniLM-L6-v2/resolve/main/modules.json HTTP/11" 200 0
+2025-06-09 09:36:31 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/paraphrase-MiniLM-L6-v2/resolve/main/sentence_bert_config.json HTTP/11" 200 0
+2025-06-09 09:36:31 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/paraphrase-MiniLM-L6-v2/resolve/main/config.json HTTP/11" 200 0
+2025-06-09 09:36:31 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "HEAD /sentence-transformers/paraphrase-MiniLM-L6-v2/resolve/main/tokenizer_config.json HTTP/11" 200 0
+2025-06-09 09:36:32 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "GET /api/models/sentence-transformers/paraphrase-MiniLM-L6-v2/revision/main HTTP/11" 200 4102
+2025-06-09 09:36:32 - urllib3.connectionpool - DEBUG - https://huggingface.co:443 "GET /api/models/sentence-transformers/paraphrase-MiniLM-L6-v2 HTTP/11" 200 4102
+2025-06-09 09:36:32 - __main__ - INFO - Dry run mode enabled. Only evaluating 3 task.
+🎬 Starting ALFRED Evaluation Script...
+📁 Using config file: config/config_alfred.yaml
+🧪 Running in DRY RUN mode (limited tasks)
+🔧 Creating evaluator instance...
+🚀 Initializing ALFRED Evaluator...
+📝 Loading configuration file...
+✅ Configuration loaded! Engine: gpt-4o-mini
+🧠 Initializing LLM planner...
+✅ LLM planner initialized!
+🏠 Initializing THOR environment...
+ThorEnv started.
+✅ Environment initialized!
+📋 Loading task splits...
+✅ Task splits loaded!
+⚙️ Preparing tasks...
+✅ 740 tasks prepared!
+🔍 Initializing sentence transformer for object matching...
+✅ Sentence transformer ready!
+💡 Using OpenAI models - no local model loading needed!
+🎉 ALFRED Evaluator initialization complete!
+⚙️ Checking dataset preprocessing...
+🏃 Starting task evaluation...
+
+Tasks: 0it [00:00, ?it/s]2025-06-09 09:36:32 - __main__ - DEBUG - {'repeat_idx': 0, 'task': 'look_at_obj_in_light-CellPhone-None-FloorLamp-219/trial_T20190908_044113_026049'}
+2025-06-09 09:36:32 - __main__ - DEBUG - Evaluating (1/3): alfred/data/json_2.1.0/look_at_obj_in_light-CellPhone-None-FloorLamp-219/trial_T20190908_044113_026049
+2025-06-09 09:36:32 - alfred.thor_connector - DEBUG - Restoring scene
+2025-06-09 09:36:33 - alfred.thor_connector - DEBUG - Getting reachable positions
+2025-06-09 09:36:33 - alfred.thor_connector - DEBUG - Found 231 reachable positions
+2025-06-09 09:36:33 - alfred.thor_connector - DEBUG - Scene restored
+2025-06-09 09:36:33 - __main__ - DEBUG - Task: Pick up the cell phone and look at it by the light of the lamp
+2025-06-09 09:36:33 - __main__ - DEBUG - Step instructions: Disabled
+2025-06-09 09:36:33 - alfred.thor_connector - DEBUG - Getting visible objects
+2025-06-09 09:36:33 - alfred.thor_connector - DEBUG - Visible objects: 
+2025-06-09 09:36:33 - __main__ - DEBUG - Current task:
+2025-06-09 09:36:33 - __main__ - DEBUG -   Task instruction: Pick up the cell phone and look at it by the light of the lamp
+2025-06-09 09:36:33 - __main__ - DEBUG -   Step instructions: Disabled
+2025-06-09 09:36:33 - __main__ - DEBUG -   Visible objects: 
+2025-06-09 09:36:33 - __main__ - DEBUG -   Completed plans: []
+2025-06-09 09:36:33 - hlp_planner - DEBUG - Generating prompt with 9 examples, includeLow=False, dynamic=False
+2025-06-09 09:36:33 - hlp_planner - DEBUG - Prompt generation complete
+2025-06-09 09:36:33 - __main__ - DEBUG - ==================================================
+2025-06-09 09:36:33 - __main__ - DEBUG - FULL PROMPT:
+2025-06-09 09:36:33 - __main__ - DEBUG - Create a high-level plan for completing a household task using the allowed actions. Follow the exact output format described in the examples. Only output the next steps of the plan. Always try to navigate to the object before interacting with it.
+
+
+Allowed actions: OpenObject, CloseObject, PickupObject, PutObject, ToggleObjectOn, ToggleObjectOff, SliceObject, Navigation
+
+IMPORTANT: Only use objects from this list: AlarmClock, Apple, ArmChair, BaseballBat, BasketBall, Bathtub, BathtubBasin, Bed, Blinds, Book, Boots, Bowl, Box, Bread, ButterKnife, Cabinet, Candle, Cart, CD, CellPhone, Chair, Cloth, CoffeeMachine, CounterTop, CreditCard, Cup, Curtains, Desk, DeskLamp, DishSponge, Drawer, Dresser, Egg, FloorLamp, Footstool, Fork, Fridge, GarbageCan, Glassbottle, HandTowel, HandTowelHolder, HousePlant, Kettle, KeyChain, Knife, Ladle, Laptop, LaundryHamper, LaundryHamperLid, Lettuce, LightSwitch, Microwave, Mirror, Mug, Newspaper, Ottoman, Painting, Pan, PaperTowel, PaperTowelRoll, Pen, Pencil, PepperShaker, Pillow, Plate, Plunger, Poster, Pot, Potato, RemoteControl, Safe, SaltShaker, ScrubBrush, Shelf, ShowerDoor, ShowerGlass, Sink, SinkBasin, SoapBar, SoapBottle, Sofa, Spatula, Spoon, SprayBottle, Statue, StoveBurner, StoveKnob, DiningTable, CoffeeTable, SideTable, TeddyBear, Television, TennisRacket, TissueBox, Toaster, Toilet, ToiletPaper, ToiletPaperHanger, ToiletPaperRoll, Tomato, Towel, TowelHolder, TVStand, Vase, Watch, WateringCan, Window, WineBottle
+
+Task description: pick up a pencil and view it in the light of the lamp
+Completed plans: Navigation shelf
+Next Plans: PickupObject pencil, Navigation desklamp, ToggleObjectOn desklamp
+
+Task description: Grab a watch and turn a lamp on.
+Completed plans: Navigation drawer, OpenObject drawer, PickupObject watch
+Next Plans: CloseObject drawer, Navigation desklamp, ToggleObjectOn desklamp
+
+Task description: Pick a computer up and turn a lamp on.
+Completed plans: Navigation bed
+Next Plans: CloseObject laptop, PickupObject laptop, Navigation desklamp, ToggleObjectOn desklamp
+
+Task description: To turn on a lamp and pick up a pen. 
+Completed plans: Navigation desklamp, ToggleObjectOn desklamp
+Next Plans: PickupObject pen
+
+Task description: examine a pillow with a lamp
+Completed plans: 
+Next Plans: Navigation bed, PickupObject pillow, Navigation desklamp, ToggleObjectOn desklamp
+
+Task description: To look at the laptop in the light. 
+Completed plans: Navigation sofa, CloseObject laptop, PickupObject laptop
+Next Plans: Navigation floorlamp, ToggleObjectOn floorlamp
+
+Task description: examine keys with the lamp
+Completed plans: Navigation desklamp
+Next Plans: ToggleObjectOn desklamp, PickupObject keychain
+
+Task description: Examine a set of keys under a tall lamp
+Completed plans: Navigation drawer, OpenObject drawer, PickupObject keychain, CloseObject drawer
+Next Plans: Navigation floorlamp, ToggleObjectOn floorlamp
+
+Task description: Examine the baseball bat using the lamp light.
+Completed plans: Navigation baseballbat, PickupObject baseballbat, Navigation desklamp
+Next Plans: ToggleObjectOn desklamp
+
+Task description: Pick up the cell phone and look at it by the light of the lamp
+Completed plans: 
+Next Plans:
+2025-06-09 09:36:33 - __main__ - DEBUG - ==================================================
+2025-06-09 09:36:33 - httpcore.connection - DEBUG - connect_tcp.started host='api.openai.com' port=443 local_address=None timeout=5.0 socket_options=None
+2025-06-09 09:36:33 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7aad75bce7c0>
+2025-06-09 09:36:33 - httpcore.connection - DEBUG - start_tls.started ssl_context=<ssl.SSLContext object at 0x7aad301dd8c0> server_hostname='api.openai.com' timeout=5.0
+2025-06-09 09:36:33 - httpcore.connection - DEBUG - start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7aad75bce490>
+2025-06-09 09:36:33 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2025-06-09 09:36:33 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-06-09 09:36:33 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2025-06-09 09:36:33 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-06-09 09:36:33 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2025-06-09 09:36:35 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Mon, 09 Jun 2025 01:36:35 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'access-control-expose-headers', b'X-Request-ID'), (b'openai-organization', b'm3s-sahunx'), (b'openai-processing-ms', b'483'), (b'openai-version', b'2020-10-01'), (b'x-envoy-upstream-service-time', b'489'), (b'x-ratelimit-limit-requests', b'10000'), (b'x-ratelimit-limit-tokens', b'10000000'), (b'x-ratelimit-remaining-requests', b'9999'), (b'x-ratelimit-remaining-tokens', b'9999196'), (b'x-ratelimit-reset-requests', b'6ms'), (b'x-ratelimit-reset-tokens', b'4ms'), (b'x-request-id', b'req_9910bdac17a7673977aabf472d2afd35'), (b'strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'cf-cache-status', b'DYNAMIC'), (b'Set-Cookie', b'__cf_bm=llUPUIcIF.JsCVripcL7LBfxqZZnEQvJ21eXUHLWaNU-1749432995-1.0.1.1-M3VUMNJeudKu2XPQRMOpswBi0kKozTXUHOSp6luADOSX61QBO0MHMa1.7oGElOZzDPA3eda2lkXFOW5WxsQYklA9BV1BdVc3rrpRDDZuJlk; path=/; expires=Mon, 09-Jun-25 02:06:35 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), (b'X-Content-Type-Options', b'nosniff'), (b'Set-Cookie', b'_cfuvid=ytqzHz6Mz33tRyUVQFWeXrzTWlFp.sevOa7olkSXkGw-1749432995142-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), (b'Server', b'cloudflare'), (b'CF-RAY', b'94cce613ca35ce85-SIN'), (b'Content-Encoding', b'gzip'), (b'alt-svc', b'h3=":443"; ma=86400')])
+2025-06-09 09:36:35 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2025-06-09 09:36:35 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-06-09 09:36:35 - httpcore.http11 - DEBUG - response_closed.started
+2025-06-09 09:36:35 - httpcore.http11 - DEBUG - response_closed.complete
+2025-06-09 09:36:35 - __main__ - DEBUG - ==================================================
+2025-06-09 09:36:35 - __main__ - DEBUG - GENERATED HIGH-LEVEL PLAN:
+2025-06-09 09:36:35 - __main__ - DEBUG -   1. Navigation bedside table
+2025-06-09 09:36:35 - __main__ - DEBUG -   2. PickupObject cellPhone
+2025-06-09 09:36:35 - __main__ - DEBUG -   3. Navigation floorlamp
+2025-06-09 09:36:35 - __main__ - DEBUG -   4. ToggleObjectOn floorlamp
+2025-06-09 09:36:35 - __main__ - DEBUG - ==================================================
+2025-06-09 09:36:35 - __main__ - DEBUG - Visible objects: ['']
+2025-06-09 09:36:35 - __main__ - DEBUG - Plan: Navigation bedside table
+2025-06-09 09:36:35 - alfred.thor_connector - DEBUG - Executing instruction: Navigation bedside table
+2025-06-09 09:36:35 - alfred.thor_connector - DEBUG - Navigation to BedsideTable (prefer_sliced=False)
+2025-06-09 09:36:35 - alfred.thor_connector - INFO - object navigation (BedsideTable)
+2025-06-09 09:36:35 - alfred.thor_connector - DEBUG - Last action succeeded
+2025-06-09 09:36:35 - __main__ - WARNING - Cannot find BedsideTable
+2025-06-09 09:36:35 - __main__ - DEBUG - Plan: PickupObject cellPhone
+2025-06-09 09:36:35 - alfred.thor_connector - DEBUG - Executing instruction: PickupObject cellPhone
+2025-06-09 09:36:35 - alfred.thor_connector - DEBUG - Picking up Cellphone
+2025-06-09 09:36:35 - alfred.thor_connector - INFO - pick CellPhone|-04.83|+01.11|+04.29
+2025-06-09 09:36:35 - alfred.thor_connector - WARNING - llm_skill_interact failed
+2025-06-09 09:36:35 - alfred.thor_connector - WARNING - errorMessage: CellPhone|-04.83|+01.11|+04.29 is not visible.
+2025-06-09 09:36:35 - alfred.thor_connector - WARNING - returned msg: Cellphone is not visible because it is in Dresser
+2025-06-09 09:36:35 - __main__ - WARNING - Cellphone is not visible because it is in Dresser
+2025-06-09 09:36:35 - __main__ - DEBUG - Plan: Navigation floorlamp
+2025-06-09 09:36:35 - alfred.thor_connector - DEBUG - Executing instruction: Navigation floorlamp
+2025-06-09 09:36:35 - alfred.thor_connector - DEBUG - Navigation to Floorlamp (prefer_sliced=False)
+2025-06-09 09:36:35 - alfred.thor_connector - INFO - object navigation (Floorlamp)
+2025-06-09 09:36:35 - alfred.thor_connector - DEBUG - Last action succeeded
+2025-06-09 09:36:35 - __main__ - DEBUG - SUCCESS: 'Navigation floorlamp' executed successfully
+2025-06-09 09:36:35 - __main__ - DEBUG - Plan: ToggleObjectOn floorlamp
+2025-06-09 09:36:35 - alfred.thor_connector - DEBUG - Executing instruction: ToggleObjectOn floorlamp
+2025-06-09 09:36:35 - alfred.thor_connector - INFO - toggle on Floorlamp
+2025-06-09 09:36:35 - alfred.thor_connector - DEBUG - Last action succeeded
+2025-06-09 09:36:35 - __main__ - DEBUG - SUCCESS: 'ToggleObjectOn floorlamp' executed successfully
+2025-06-09 09:36:35 - __main__ - DEBUG - target goal: {"object": "CellPhone", "parent": "", "toggle": "FloorLamp", "mrecep": ""}
+2025-06-09 09:36:35 - __main__ - DEBUG - success: False
+
+Tasks: 1it [00:02,  2.94s/it]2025-06-09 09:36:35 - __main__ - DEBUG - {'repeat_idx': 1, 'task': 'look_at_obj_in_light-CellPhone-None-FloorLamp-219/trial_T20190908_044113_026049'}
+2025-06-09 09:36:35 - __main__ - DEBUG - Evaluating (2/3): alfred/data/json_2.1.0/look_at_obj_in_light-CellPhone-None-FloorLamp-219/trial_T20190908_044113_026049
+2025-06-09 09:36:35 - alfred.thor_connector - DEBUG - Restoring scene
+2025-06-09 09:36:35 - alfred.thor_connector - DEBUG - Getting reachable positions
+2025-06-09 09:36:35 - alfred.thor_connector - DEBUG - Found 231 reachable positions
+2025-06-09 09:36:35 - alfred.thor_connector - DEBUG - Scene restored
+2025-06-09 09:36:35 - __main__ - DEBUG - Task: Turn on the bedroom lamp.
+2025-06-09 09:36:35 - __main__ - DEBUG - Step instructions: Disabled
+2025-06-09 09:36:35 - alfred.thor_connector - DEBUG - Getting visible objects
+2025-06-09 09:36:35 - alfred.thor_connector - DEBUG - Visible objects: 
+2025-06-09 09:36:35 - __main__ - DEBUG - Current task:
+2025-06-09 09:36:35 - __main__ - DEBUG -   Task instruction: Turn on the bedroom lamp.
+2025-06-09 09:36:35 - __main__ - DEBUG -   Step instructions: Disabled
+2025-06-09 09:36:35 - __main__ - DEBUG -   Visible objects: 
+2025-06-09 09:36:35 - __main__ - DEBUG -   Completed plans: []
+2025-06-09 09:36:35 - hlp_planner - DEBUG - Generating prompt with 9 examples, includeLow=False, dynamic=False
+2025-06-09 09:36:36 - hlp_planner - DEBUG - Prompt generation complete
+2025-06-09 09:36:36 - __main__ - DEBUG - ==================================================
+2025-06-09 09:36:36 - __main__ - DEBUG - FULL PROMPT:
+2025-06-09 09:36:36 - __main__ - DEBUG - Create a high-level plan for completing a household task using the allowed actions. Follow the exact output format described in the examples. Only output the next steps of the plan. Always try to navigate to the object before interacting with it.
+
+
+Allowed actions: OpenObject, CloseObject, PickupObject, PutObject, ToggleObjectOn, ToggleObjectOff, SliceObject, Navigation
+
+IMPORTANT: Only use objects from this list: AlarmClock, Apple, ArmChair, BaseballBat, BasketBall, Bathtub, BathtubBasin, Bed, Blinds, Book, Boots, Bowl, Box, Bread, ButterKnife, Cabinet, Candle, Cart, CD, CellPhone, Chair, Cloth, CoffeeMachine, CounterTop, CreditCard, Cup, Curtains, Desk, DeskLamp, DishSponge, Drawer, Dresser, Egg, FloorLamp, Footstool, Fork, Fridge, GarbageCan, Glassbottle, HandTowel, HandTowelHolder, HousePlant, Kettle, KeyChain, Knife, Ladle, Laptop, LaundryHamper, LaundryHamperLid, Lettuce, LightSwitch, Microwave, Mirror, Mug, Newspaper, Ottoman, Painting, Pan, PaperTowel, PaperTowelRoll, Pen, Pencil, PepperShaker, Pillow, Plate, Plunger, Poster, Pot, Potato, RemoteControl, Safe, SaltShaker, ScrubBrush, Shelf, ShowerDoor, ShowerGlass, Sink, SinkBasin, SoapBar, SoapBottle, Sofa, Spatula, Spoon, SprayBottle, Statue, StoveBurner, StoveKnob, DiningTable, CoffeeTable, SideTable, TeddyBear, Television, TennisRacket, TissueBox, Toaster, Toilet, ToiletPaper, ToiletPaperHanger, ToiletPaperRoll, Tomato, Towel, TowelHolder, TVStand, Vase, Watch, WateringCan, Window, WineBottle
+
+Task description: To turn on a lamp and pick up a pen. 
+Completed plans: Navigation desklamp
+Next Plans: ToggleObjectOn desklamp, PickupObject pen
+
+Task description: examine a pillow with a lamp
+Completed plans: Navigation bed, PickupObject pillow, Navigation desklamp
+Next Plans: ToggleObjectOn desklamp
+
+Task description: Grab a watch and turn a lamp on.
+Completed plans: Navigation drawer, OpenObject drawer, PickupObject watch, CloseObject drawer, Navigation desklamp
+Next Plans: ToggleObjectOn desklamp
+
+Task description: Turn on a lamp while holding a laptop.
+Completed plans: Navigation sofa, CloseObject laptop, PickupObject laptop, Navigation floorlamp
+Next Plans: ToggleObjectOn floorlamp
+
+Task description: Pick a computer up and turn a lamp on.
+Completed plans: Navigation bed, CloseObject laptop, PickupObject laptop
+Next Plans: Navigation desklamp, ToggleObjectOn desklamp
+
+Task description: pick up a pencil and view it in the light of the lamp
+Completed plans: Navigation shelf
+Next Plans: PickupObject pencil, Navigation desklamp, ToggleObjectOn desklamp
+
+Task description: Put two candles in the drawer under the sink.
+Completed plans: Navigation candle, PickupObject candle, Navigation drawer, OpenObject drawer, PutObject candle drawer, CloseObject drawer
+Next Plans: Navigation countertop, PickupObject candle, Navigation drawer, OpenObject drawer, PutObject candle drawer, CloseObject drawer
+
+Task description: Put a heated plate down in a corner cabinet. 
+Completed plans: Navigation fridge, OpenObject fridge, PickupObject plate, CloseObject fridge, Navigation microwave, OpenObject microwave, PutObject plate microwave, CloseObject microwave, ToggleObjectOn microwave, ToggleObjectOff microwave
+Next Plans: OpenObject microwave, PickupObject plate, CloseObject microwave, Navigation cabinet, OpenObject cabinet, PutObject plate cabinet, CloseObject cabinet
+
+Task description: Examine a set of keys under a tall lamp
+Completed plans: Navigation drawer, OpenObject drawer, PickupObject keychain, CloseObject drawer, Navigation floorlamp
+Next Plans: ToggleObjectOn floorlamp
+
+Task description: Turn on the bedroom lamp.
+Completed plans: 
+Next Plans:
+2025-06-09 09:36:36 - __main__ - DEBUG - ==================================================
+2025-06-09 09:36:36 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2025-06-09 09:36:36 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-06-09 09:36:36 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2025-06-09 09:36:36 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-06-09 09:36:36 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2025-06-09 09:36:37 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Mon, 09 Jun 2025 01:36:37 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'access-control-expose-headers', b'X-Request-ID'), (b'openai-organization', b'm3s-sahunx'), (b'openai-processing-ms', b'572'), (b'openai-version', b'2020-10-01'), (b'x-envoy-upstream-service-time', b'578'), (b'x-ratelimit-limit-requests', b'10000'), (b'x-ratelimit-limit-tokens', b'10000000'), (b'x-ratelimit-remaining-requests', b'9999'), (b'x-ratelimit-remaining-tokens', b'9999085'), (b'x-ratelimit-reset-requests', b'6ms'), (b'x-ratelimit-reset-tokens', b'5ms'), (b'x-request-id', b'req_e6d92d39913352921b94f1880e064e7e'), (b'strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'cf-cache-status', b'DYNAMIC'), (b'X-Content-Type-Options', b'nosniff'), (b'Server', b'cloudflare'), (b'CF-RAY', b'94cce621686ace85-SIN'), (b'Content-Encoding', b'gzip'), (b'alt-svc', b'h3=":443"; ma=86400')])
+2025-06-09 09:36:37 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2025-06-09 09:36:37 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-06-09 09:36:37 - httpcore.http11 - DEBUG - response_closed.started
+2025-06-09 09:36:37 - httpcore.http11 - DEBUG - response_closed.complete
+2025-06-09 09:36:37 - __main__ - DEBUG - ==================================================
+2025-06-09 09:36:37 - __main__ - DEBUG - GENERATED HIGH-LEVEL PLAN:
+2025-06-09 09:36:37 - __main__ - DEBUG -   1. Navigation bed
+2025-06-09 09:36:37 - __main__ - DEBUG -   2. Navigation floorlamp
+2025-06-09 09:36:37 - __main__ - DEBUG -   3. ToggleObjectOn floorlamp
+2025-06-09 09:36:37 - __main__ - DEBUG - ==================================================
+2025-06-09 09:36:37 - __main__ - DEBUG - Visible objects: ['']
+2025-06-09 09:36:37 - __main__ - DEBUG - Plan: Navigation bed
+2025-06-09 09:36:37 - alfred.thor_connector - DEBUG - Executing instruction: Navigation bed
+2025-06-09 09:36:37 - alfred.thor_connector - DEBUG - Navigation to Bed (prefer_sliced=False)
+2025-06-09 09:36:37 - alfred.thor_connector - INFO - object navigation (Bed)
+2025-06-09 09:36:37 - alfred.thor_connector - DEBUG - Last action succeeded
+2025-06-09 09:36:37 - __main__ - WARNING - Cannot find Bed
+2025-06-09 09:36:37 - __main__ - DEBUG - Plan: Navigation floorlamp
+2025-06-09 09:36:37 - alfred.thor_connector - DEBUG - Executing instruction: Navigation floorlamp
+2025-06-09 09:36:37 - alfred.thor_connector - DEBUG - Navigation to Floorlamp (prefer_sliced=False)
+2025-06-09 09:36:37 - alfred.thor_connector - INFO - object navigation (Floorlamp)
+2025-06-09 09:36:37 - alfred.thor_connector - DEBUG - Last action succeeded
+2025-06-09 09:36:37 - __main__ - DEBUG - SUCCESS: 'Navigation floorlamp' executed successfully
+2025-06-09 09:36:37 - __main__ - DEBUG - Plan: ToggleObjectOn floorlamp
+2025-06-09 09:36:37 - alfred.thor_connector - DEBUG - Executing instruction: ToggleObjectOn floorlamp
+2025-06-09 09:36:37 - alfred.thor_connector - INFO - toggle on Floorlamp
+2025-06-09 09:36:37 - alfred.thor_connector - DEBUG - Last action succeeded
+2025-06-09 09:36:37 - __main__ - DEBUG - SUCCESS: 'ToggleObjectOn floorlamp' executed successfully
+2025-06-09 09:36:37 - __main__ - DEBUG - target goal: {"object": "CellPhone", "parent": "", "toggle": "FloorLamp", "mrecep": ""}
+2025-06-09 09:36:37 - __main__ - DEBUG - success: False
+
+Tasks: 2it [00:04,  2.41s/it]2025-06-09 09:36:37 - __main__ - DEBUG - {'repeat_idx': 2, 'task': 'look_at_obj_in_light-CellPhone-None-FloorLamp-219/trial_T20190908_044113_026049'}
+2025-06-09 09:36:37 - __main__ - DEBUG - Evaluating (3/3): alfred/data/json_2.1.0/look_at_obj_in_light-CellPhone-None-FloorLamp-219/trial_T20190908_044113_026049
+2025-06-09 09:36:37 - alfred.thor_connector - DEBUG - Restoring scene
+2025-06-09 09:36:37 - alfred.thor_connector - DEBUG - Getting reachable positions
+2025-06-09 09:36:37 - alfred.thor_connector - DEBUG - Found 231 reachable positions
+2025-06-09 09:36:37 - alfred.thor_connector - DEBUG - Scene restored
+2025-06-09 09:36:37 - __main__ - DEBUG - Task: examine a phone with a lamp
+2025-06-09 09:36:37 - __main__ - DEBUG - Step instructions: Disabled
+2025-06-09 09:36:37 - alfred.thor_connector - DEBUG - Getting visible objects
+2025-06-09 09:36:37 - alfred.thor_connector - DEBUG - Visible objects: 
+2025-06-09 09:36:37 - __main__ - DEBUG - Current task:
+2025-06-09 09:36:37 - __main__ - DEBUG -   Task instruction: examine a phone with a lamp
+2025-06-09 09:36:37 - __main__ - DEBUG -   Step instructions: Disabled
+2025-06-09 09:36:37 - __main__ - DEBUG -   Visible objects: 
+2025-06-09 09:36:37 - __main__ - DEBUG -   Completed plans: []
+2025-06-09 09:36:37 - hlp_planner - DEBUG - Generating prompt with 9 examples, includeLow=False, dynamic=False
+2025-06-09 09:36:38 - hlp_planner - DEBUG - Prompt generation complete
+2025-06-09 09:36:38 - __main__ - DEBUG - ==================================================
+2025-06-09 09:36:38 - __main__ - DEBUG - FULL PROMPT:
+2025-06-09 09:36:38 - __main__ - DEBUG - Create a high-level plan for completing a household task using the allowed actions. Follow the exact output format described in the examples. Only output the next steps of the plan. Always try to navigate to the object before interacting with it.
+
+
+Allowed actions: OpenObject, CloseObject, PickupObject, PutObject, ToggleObjectOn, ToggleObjectOff, SliceObject, Navigation
+
+IMPORTANT: Only use objects from this list: AlarmClock, Apple, ArmChair, BaseballBat, BasketBall, Bathtub, BathtubBasin, Bed, Blinds, Book, Boots, Bowl, Box, Bread, ButterKnife, Cabinet, Candle, Cart, CD, CellPhone, Chair, Cloth, CoffeeMachine, CounterTop, CreditCard, Cup, Curtains, Desk, DeskLamp, DishSponge, Drawer, Dresser, Egg, FloorLamp, Footstool, Fork, Fridge, GarbageCan, Glassbottle, HandTowel, HandTowelHolder, HousePlant, Kettle, KeyChain, Knife, Ladle, Laptop, LaundryHamper, LaundryHamperLid, Lettuce, LightSwitch, Microwave, Mirror, Mug, Newspaper, Ottoman, Painting, Pan, PaperTowel, PaperTowelRoll, Pen, Pencil, PepperShaker, Pillow, Plate, Plunger, Poster, Pot, Potato, RemoteControl, Safe, SaltShaker, ScrubBrush, Shelf, ShowerDoor, ShowerGlass, Sink, SinkBasin, SoapBar, SoapBottle, Sofa, Spatula, Spoon, SprayBottle, Statue, StoveBurner, StoveKnob, DiningTable, CoffeeTable, SideTable, TeddyBear, Television, TennisRacket, TissueBox, Toaster, Toilet, ToiletPaper, ToiletPaperHanger, ToiletPaperRoll, Tomato, Towel, TowelHolder, TVStand, Vase, Watch, WateringCan, Window, WineBottle
+
+Task description: pick up a pencil and view it in the light of the lamp
+Completed plans: 
+Next Plans: Navigation shelf, PickupObject pencil, Navigation desklamp, ToggleObjectOn desklamp
+
+Task description: examine a pillow with a lamp
+Completed plans: Navigation bed
+Next Plans: PickupObject pillow, Navigation desklamp, ToggleObjectOn desklamp
+
+Task description: Grab a watch and turn a lamp on.
+Completed plans: Navigation drawer, OpenObject drawer, PickupObject watch, CloseObject drawer
+Next Plans: Navigation desklamp, ToggleObjectOn desklamp
+
+Task description: examine keys with the lamp
+Completed plans: 
+Next Plans: Navigation desklamp, ToggleObjectOn desklamp, PickupObject keychain
+
+Task description: To turn on a lamp and pick up a pen. 
+Completed plans: Navigation desklamp
+Next Plans: ToggleObjectOn desklamp, PickupObject pen
+
+Task description: Pick a computer up and turn a lamp on.
+Completed plans: Navigation bed
+Next Plans: CloseObject laptop, PickupObject laptop, Navigation desklamp, ToggleObjectOn desklamp
+
+Task description: Examine a set of keys under a tall lamp
+Completed plans: Navigation drawer, OpenObject drawer, PickupObject keychain, CloseObject drawer, Navigation floorlamp
+Next Plans: ToggleObjectOn floorlamp
+
+Task description: Turn on a lamp while holding a laptop.
+Completed plans: Navigation sofa, CloseObject laptop
+Next Plans: PickupObject laptop, Navigation floorlamp, ToggleObjectOn floorlamp
+
+Task description: Examine the baseball bat using the lamp light.
+Completed plans: Navigation baseballbat, PickupObject baseballbat, Navigation desklamp
+Next Plans: ToggleObjectOn desklamp
+
+Task description: examine a phone with a lamp
+Completed plans: 
+Next Plans:
+2025-06-09 09:36:38 - __main__ - DEBUG - ==================================================
+2025-06-09 09:36:38 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2025-06-09 09:36:38 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-06-09 09:36:38 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2025-06-09 09:36:38 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-06-09 09:36:38 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2025-06-09 09:36:38 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Mon, 09 Jun 2025 01:36:38 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'access-control-expose-headers', b'X-Request-ID'), (b'openai-organization', b'm3s-sahunx'), (b'openai-processing-ms', b'495'), (b'openai-version', b'2020-10-01'), (b'x-envoy-upstream-service-time', b'503'), (b'x-ratelimit-limit-requests', b'10000'), (b'x-ratelimit-limit-tokens', b'10000000'), (b'x-ratelimit-remaining-requests', b'9999'), (b'x-ratelimit-remaining-tokens', b'9999203'), (b'x-ratelimit-reset-requests', b'6ms'), (b'x-ratelimit-reset-tokens', b'4ms'), (b'x-request-id', b'req_2a7d5a690647b9868935c7ea82a6c89b'), (b'strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'cf-cache-status', b'DYNAMIC'), (b'X-Content-Type-Options', b'nosniff'), (b'Server', b'cloudflare'), (b'CF-RAY', b'94cce62ded9ace85-SIN'), (b'Content-Encoding', b'gzip'), (b'alt-svc', b'h3=":443"; ma=86400')])
+2025-06-09 09:36:38 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2025-06-09 09:36:38 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-06-09 09:36:38 - httpcore.http11 - DEBUG - response_closed.started
+2025-06-09 09:36:38 - httpcore.http11 - DEBUG - response_closed.complete
+2025-06-09 09:36:38 - __main__ - DEBUG - ==================================================
+2025-06-09 09:36:38 - __main__ - DEBUG - GENERATED HIGH-LEVEL PLAN:
+2025-06-09 09:36:38 - __main__ - DEBUG -   1. Navigation desk
+2025-06-09 09:36:38 - __main__ - DEBUG -   2. PickupObject cellPhone
+2025-06-09 09:36:38 - __main__ - DEBUG -   3. Navigation desklamp
+2025-06-09 09:36:38 - __main__ - DEBUG -   4. ToggleObjectOn desklamp
+2025-06-09 09:36:38 - __main__ - DEBUG - ==================================================
+2025-06-09 09:36:38 - __main__ - DEBUG - Visible objects: ['']
+2025-06-09 09:36:38 - __main__ - DEBUG - Plan: Navigation desk
+2025-06-09 09:36:38 - alfred.thor_connector - DEBUG - Executing instruction: Navigation desk
+2025-06-09 09:36:38 - alfred.thor_connector - DEBUG - Navigation to Desk (prefer_sliced=False)
+2025-06-09 09:36:38 - alfred.thor_connector - INFO - object navigation (Desk)
+2025-06-09 09:36:38 - alfred.thor_connector - DEBUG - Last action succeeded
+2025-06-09 09:36:38 - __main__ - WARNING - Cannot find Desk
+2025-06-09 09:36:38 - __main__ - DEBUG - Plan: PickupObject cellPhone
+2025-06-09 09:36:38 - alfred.thor_connector - DEBUG - Executing instruction: PickupObject cellPhone
+2025-06-09 09:36:38 - alfred.thor_connector - DEBUG - Picking up Cellphone
+2025-06-09 09:36:38 - alfred.thor_connector - INFO - pick CellPhone|-04.83|+01.11|+04.29
+2025-06-09 09:36:38 - alfred.thor_connector - WARNING - llm_skill_interact failed
+2025-06-09 09:36:38 - alfred.thor_connector - WARNING - errorMessage: CellPhone|-04.83|+01.11|+04.29 is not visible.
+2025-06-09 09:36:38 - alfred.thor_connector - WARNING - returned msg: Cellphone is not visible because it is in Dresser
+2025-06-09 09:36:38 - __main__ - WARNING - Cellphone is not visible because it is in Dresser
+2025-06-09 09:36:38 - __main__ - DEBUG - Plan: Navigation desklamp
+2025-06-09 09:36:38 - alfred.thor_connector - DEBUG - Executing instruction: Navigation desklamp
+2025-06-09 09:36:38 - alfred.thor_connector - DEBUG - Navigation to Desklamp (prefer_sliced=False)
+2025-06-09 09:36:38 - alfred.thor_connector - INFO - object navigation (Desklamp)
+2025-06-09 09:36:38 - alfred.thor_connector - WARNING - llm_skill_interact failed
+2025-06-09 09:36:38 - alfred.thor_connector - WARNING - errorMessage: CellPhone|-04.83|+01.11|+04.29 is not visible.
+2025-06-09 09:36:38 - alfred.thor_connector - WARNING - returned msg: Cannot find Desklamp
+2025-06-09 09:36:38 - __main__ - WARNING - Cannot find Desklamp
+2025-06-09 09:36:38 - __main__ - DEBUG - Plan: ToggleObjectOn desklamp
+2025-06-09 09:36:38 - alfred.thor_connector - DEBUG - Executing instruction: ToggleObjectOn desklamp
+2025-06-09 09:36:38 - alfred.thor_connector - INFO - toggle on Desklamp
+2025-06-09 09:36:38 - alfred.thor_connector - WARNING - llm_skill_interact failed
+2025-06-09 09:36:38 - alfred.thor_connector - WARNING - errorMessage: CellPhone|-04.83|+01.11|+04.29 is not visible.
+2025-06-09 09:36:38 - alfred.thor_connector - WARNING - returned msg: Cannot find Desklamp to turn on
+2025-06-09 09:36:38 - __main__ - WARNING - Cannot find Desklamp to turn on
+2025-06-09 09:36:38 - __main__ - DEBUG - target goal: {"object": "CellPhone", "parent": "", "toggle": "FloorLamp", "mrecep": ""}
+2025-06-09 09:36:38 - __main__ - DEBUG - success: False
+
+Tasks: 3it [00:06,  1.96s/it]
+Tasks: 3it [00:06,  2.14s/it]
+2025-06-09 09:36:38 - __main__ - INFO - success rate: 0.00 % (0/3)
+2025-06-09 09:36:38 - __main__ - INFO - elapsed: 0:00:06.413334
+2025-06-09 09:36:38 - __main__ - INFO - ------------------------
+2025-06-09 09:36:38 - __main__ - INFO - alfred:
+  env_args:
+    data: alfred/data/json_2.1.0
+    fast_epoch: false
+    headless: true
+    max_steps: 1000
+    pframe: 300
+    pp_folder: pp
+    reward_config: alfred/models/config/rewards.json
+  eval_set: valid_unseen
+  splits: alfred/data/splits/oct21.json
+  x_display: '1'
+debug: false
+llm_planner:
+  debug: true
+  dynamic: false
+  emb_model_name: paraphrase-MiniLM-L6-v2
+  engine: gpt-4o-mini
+  knn_dataset_path: src/knn_set.pkl
+  max_replanning: 5
+  max_retries: 1
+  num_in_context_examples: 9
+  obj_sim_threshold: 0.8
+  use_step_instructions: false
+  vision: false
+name: alfred
+out_dir: ./
+save_results: true
+
+Resetting ThorEnv
+🤖 LLM call started with engine: gpt-4o-mini
+🔄 Using OpenAI API...
+📡 Making OpenAI API call...
+✅ OpenAI response received!
+Resetting ThorEnv
+🤖 LLM call started with engine: gpt-4o-mini
+🔄 Using OpenAI API...
+📡 Making OpenAI API call...
+✅ OpenAI response received!
+Resetting ThorEnv
+🤖 LLM call started with engine: gpt-4o-mini
+🔄 Using OpenAI API...
+📡 Making OpenAI API call...
+✅ OpenAI response received!
+💾 Saving results to file...
+✅ Results saved to ./results_20250609_093638.json
+🏁 Evaluation complete!
+2025-06-09 09:36:39 - httpcore.connection - DEBUG - close.started
+2025-06-09 09:36:39 - httpcore.connection - DEBUG - close.complete

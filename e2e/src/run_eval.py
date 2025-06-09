@@ -112,7 +112,23 @@ class AlfredEvaluator:
             print("✅ Llama-3 Vision model ready!")
 
         # Initialize Mistral model if specified in config
-        if self.config["llm_planner"]["engine"] == "mistral-7b-instruct":
+        elif self.config["llm_planner"]["engine"] == "mistral-7b-instruct":
+            print(" Intializing Mistral-7B-Instruct model...")
+            model_id = "mistralai/Mistral-7B-Instruct-v0.2"
+            print(f"📥 Loading model: {model_id}")
+
+            self.mistral_model = AutoModelForCausalLM.from_pretrained(
+                model_id, 
+                torch_dtype=torch.float16,
+                device_map="cuda",
+            )
+            print("📥 Loading processor...")
+            self.mistral_tokenizer = AutoTokenizer.from_pretrained(model_id)
+            print("✅ Mistral-7B-Instruct model ready!")
+
+        # Initialize Mistral model if specified in config
+        # TODO: Adapt the model 
+        elif self.config["llm_planner"]["engine"] == "mistral-7b-instruct-adapted":
             print(" Intializing Mistral-7B-Instruct model...")
             model_id = "mistralai/Mistral-7B-Instruct-v0.2"
             print(f"📥 Loading model: {model_id}")
@@ -291,7 +307,53 @@ class AlfredEvaluator:
                 print("✅ Mistral response generated!")
                 return decoded_output[0].strip()
 
-        
+        elif engine == "mistral-7b-instruct-adapted":
+            print("🦙 Using Mistral-7B-Instruct-adapted model...")
+
+            # Mistral is a text-only model — image input will be ignored
+            if images and len(images) > 0:
+                print("📝 Images provided, but Mistral-7B-Instruct only supports text. Proceeding in text-only mode.")
+            else:
+                print("📝 No image provided - proceeding in text-only mode.")
+
+            # Prepare messages in plain string format
+            print("💬 Formatting messages for Mistral...")
+            messages = [
+                {"role": "user", "content": prompt}
+            ]
+
+            # Ensure pad_token is set
+            if self.mistral_tokenizer.pad_token is None:
+                print("⚠️ Setting pad_token to eos_token")
+                self.mistral_tokenizer.pad_token = self.mistral_tokenizer.eos_token
+
+            # TODO:Train using the first 40 datasamples 
+            # Generate response
+            print("⚡ Generating response with Mistral model...")
+            with torch.no_grad():
+                print("🔄 Applying chat template...")
+                inputs = self.mistral_tokenizer.apply_chat_template(
+                    messages,
+                    return_tensors="pt",
+                    padding=True,
+                    add_generation_prompt=True
+                ).to(self.mistral_model.device)
+
+                print("🎯 Generating text...")
+                generated_ids = self.mistral_model.generate(
+                    inputs,
+                    pad_token_id=self.mistral_tokenizer.eos_token_id,
+                    max_new_tokens=512,         # Reduce if OOM occurs
+                    do_sample=False,
+                    temperature=0.7,
+                    top_p=0.95
+                )
+
+                print("📝 Decoding response...")
+                decoded_output = self.mistral_tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
+
+                print("✅ Mistral response generated!")
+                return decoded_output[0].strip()
         else:
             print(f"❌ Engine {engine} is not supported!")
             raise ValueError(f"{engine} is not supported!")

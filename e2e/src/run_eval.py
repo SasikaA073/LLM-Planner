@@ -31,11 +31,13 @@ from io import BytesIO
 from transformers import MllamaForConditionalGeneration, AutoProcessor
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import gc
+from my_adapter import DCTAdapter
 
 from alfred.thor_connector import ThorConnector
 from alfred.utils import dotdict, load_task_json
 from alfred.data.preprocess import Dataset
 from hlp_planner import LLM_Planner
+from adapter_helper_functions import * 
 
 sys.path.insert(0, '..')
 sys.path.insert(0, '')
@@ -43,7 +45,7 @@ sys.path.insert(0, './alfred')
 
 # Configure the root logger to print to console
 logging.basicConfig(
-    level=logging.DEBUG,  # Change from INFO to DEBUG
+    level=logging.ERROR,  # Change from INFO to DEBUG
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
@@ -55,99 +57,165 @@ logging.getLogger("httpx").setLevel(logging.ERROR)
 
 class AlfredEvaluator:
     def __init__(self, config_file):
-        print("🚀 Initializing ALFRED Evaluator...")
-        
         # Load configuration
-        print("📝 Loading configuration file...")
         with open(config_file) as reader:
             self.config = yaml.safe_load(reader)
-        print(f"✅ Configuration loaded! Engine: {self.config['llm_planner']['engine']}")
         
         # Initialize OpenAI client
         self.client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
         
         # Initialize LLM planner
-        print("🧠 Initializing LLM planner...")
         self.llm_planner = LLM_Planner(
             knn_data_path=self.config["llm_planner"]["knn_dataset_path"], 
             emb_model_name=self.config["llm_planner"]["emb_model_name"], 
             debug=self.config["llm_planner"]["debug"]
         )
-        print("✅ LLM planner initialized!")
         
         # Initialize environment
-        print("🏠 Initializing THOR environment...")
         self.env = ThorConnector(x_display=self.config["alfred"]["x_display"])
-        print("✅ Environment initialized!")
-        
+
         # Load task splits
-        print("📋 Loading task splits...")
         with open(self.config["alfred"]["splits"]) as f:
             self.splits = json.load(f)
-        print("✅ Task splits loaded!")
             
         # Prepare tasks
-        print("⚙️ Preparing tasks...")
         self.tasks = self._prepare_tasks()
-        print(f"✅ {len(self.tasks)} tasks prepared!")
         
         # Initialize the sentence transformer for object name matching
-        print("🔍 Initializing sentence transformer for object matching...")
         self.obj_encoder = SentenceTransformer(self.config["llm_planner"]["emb_model_name"])
         self.obj_sim_threshold = self.config["llm_planner"].get("obj_sim_threshold", 0.8)  # Default similarity threshold
-        print("✅ Sentence transformer ready!")
+        
+        # Checkpoint configuration
+        self.checkpoint_dir = self.config.get("checkpoint_dir", "src/checkpoints") # Use src/checkpoints as default
+        self.save_every = self.config.get("save_every", 5) # Save every 10 training steps
+        self.training_step = 0
+        os.makedirs(self.checkpoint_dir, exist_ok=True)
+
+        # Adaptation
+        self.adapter_config_path = "config/adapter_config.yaml"
         
         # Initialize Llama model if specified in config
         if self.config["llm_planner"]["engine"] == "llama-3-vision":
-            print("🦙 Initializing Llama-3 Vision model...")
             model_id = "meta-llama/Llama-3.2-11B-Vision-Instruct"
-            print(f"📥 Loading model: {model_id}")
             self.llama_model = MllamaForConditionalGeneration.from_pretrained(
                 model_id,
                 torch_dtype=torch.float16,
                 device_map="cuda",  # Changed from "cpu" to "auto" for better performance
             )
-            print("📥 Loading processor...")
             self.llama_processor = AutoProcessor.from_pretrained(model_id)
-            print("✅ Llama-3 Vision model ready!")
+
+            # Initialize optimizer for online training
+            from torch.optim import AdamW
+            self.llama_optimizer = AdamW(
+                self.llama_model.parameters(),
+                lr=1e-6,  # Very small learning rate for online learning
+                weight_decay=0.01
+            )
+
+            print("✅ Llama 3 model loaded")
+        
+        elif self.config["llm_planner"]["engine"] == "llama-3-vision-adapted":
+            model_id = "meta-llama/Llama-3.2-11B-Vision-Instruct"
+            self.llama_model = MllamaForConditionalGeneration.from_pretrained(
+                model_id,
+                torch_dtype=torch.float16,
+                device_map="cuda",  # Changed from "cpu" to "auto" for better performance
+                load_in_8bit=True  # 8-bit quantization
+            )
+            self.llama_processor = AutoProcessor.from_pretrained(model_id)
+
+            
+            
+            # Initialize optimizer for online training
+            from torch.optim import AdamW
+            self.llama_optimizer = AdamW(
+                self.llama_model.parameters(),
+                lr=1e-6,  # Very small learning rate for online learning
+                weight_decay=0.01
+            )
 
         # Initialize Mistral model if specified in config
         elif self.config["llm_planner"]["engine"] == "mistral-7b-instruct":
-            print(" Intializing Mistral-7B-Instruct model...")
             model_id = "mistralai/Mistral-7B-Instruct-v0.2"
-            print(f"📥 Loading model: {model_id}")
 
             self.mistral_model = AutoModelForCausalLM.from_pretrained(
                 model_id, 
                 torch_dtype=torch.float16,
-                device_map="cuda",
+                device_map="auto", # Use auto for better distribution
+                load_in_8bit=True  # 8-bit quantization
             )
-            print("📥 Loading processor...")
             self.mistral_tokenizer = AutoTokenizer.from_pretrained(model_id)
-            print("✅ Mistral-7B-Instruct model ready!")
 
-        # Initialize Mistral model if specified in config
-        # TODO: Adapt the model 
+            print("✅ Mistral model loaded")
+
         elif self.config["llm_planner"]["engine"] == "mistral-7b-instruct-adapted":
-            print(" Intializing Mistral-7B-Instruct model...")
+            engine = self.config["llm_planner"]["engine"]
+            print(f"🦙 Initializing Mistral model ({engine})...")
             model_id = "mistralai/Mistral-7B-Instruct-v0.2"
             print(f"📥 Loading model: {model_id}")
 
             self.mistral_model = AutoModelForCausalLM.from_pretrained(
                 model_id, 
                 torch_dtype=torch.float16,
-                device_map="cuda",
+                device_map="auto", # Use auto for better distribution
+                load_in_8bit=True  # 8-bit quantization
             )
-            print("📥 Loading processor...")
+            print("📥 Loading tokenizer...")
             self.mistral_tokenizer = AutoTokenizer.from_pretrained(model_id)
-            print("✅ Mistral-7B-Instruct model ready!")
 
-        else:
-            self.llama_model = None
-            self.llama_processor = None
-            print("💡 Using OpenAI models - no local model loading needed!")
-        
-        print("🎉 ALFRED Evaluator initialization complete!")
+            # TODO: Do adaptation 
+            logger.info(f"Loading adapter configuration from {self.adapter_config_path}")
+            with open(self.adapter_config_path, 'r') as f:
+                adapter_config_yaml = yaml.safe_load(f)
+
+            adapter_params_from_yaml = adapter_config_yaml.get('adapter', {}).get('params', {})
+            # Ensure 'input_dim' from yaml is correctly named 'input_dim' for DCTAdapter constructor
+            # The DCTAdapter class expects 'input_dim'. The yaml has 'input_dim'.
+            # num_components is also in yaml and DCTAdapter constructor.
+            
+            adapter_layers_from_yaml = adapter_config_yaml.get('adapter', {}).get('layers', [])
+            
+            if not adapter_layers_from_yaml:
+                logger.error("No adapter layers specified in the YAML configuration. Exiting.")
+                exit(1)
+            if not adapter_params_from_yaml:
+                logger.warning("No adapter parameters (params) specified in the YAML. Using defaults for DCTAdapter if any.")
+
+            # Inject DCT Adapter 
+            logger.info("Injecting DCT Adapters...")
+            self.mistral_model = inject_adapters(self.mistral_model, DCTAdapter, 
+                                    base_adapter_args=adapter_params_from_yaml, 
+                                    layers_config=adapter_layers_from_yaml)
+            
+           
+            adapter_device = self.mistral_model.device
+            for module in self.mistral_model.modules():
+                if isinstance(module, DCTAdapter):  # Change this according to the Adapter name 
+                    module.to(dtype=torch.float16, device=adapter_device)
+            # self.mistral_model.to(self.mistral_model.device)
+
+            # CHECK THE DTYPE 
+            for name, param in self.mistral_model.named_parameters():
+                if 'adapter' in name:
+                    print(f"[DEBUG] {name} – dtype: {param.dtype}, device: {param.device}")
+
+            print("✅ Adapted Mistral model ready!")
+            from torch.optim import AdamW
+
+            freeze_model_except_adapters(self.mistral_model)
+
+            trainable_params = filter(lambda p: p.requires_grad, self.mistral_model.parameters())
+            
+            print(f"[DEBUG] trainable params :\n{trainable_params}")
+            self.mistral_optimizer = AdamW(
+                trainable_params,
+                lr=1e-6,  # Very small learning rate for online learning
+                weight_decay=0.01
+            )
+            print(f"Adapter Configuration : \n{adapter_config_yaml}")
+
+        self.training_samples = 50  # First 50 samples for training
+        # sys.exit()
         
     def _prepare_tasks(self):
         """Prepare tasks for evaluation"""
@@ -169,18 +237,14 @@ class AlfredEvaluator:
             
         return tasks
     
-    def llm(self, prompt, engine, images=None, stop=["\n"]):
+    def llm(self, prompt, engine, images=None, stop=["\n"], do_train=False):
         """Interface to LLM models"""
-        print(f"🤖 LLM call started with engine: {engine}")
-
-        if engine == 'gpt-4o-mini' or engine == 'gpt-4o':
-            print("🔄 Using OpenAI API...")
+        if engine in ['gpt-4o-mini', 'gpt-4o']:
             # Create the base message content
             message_content = []
             
             # Add image if provided
             if images and len(images) > 0:
-                print("🖼️ Adding image to OpenAI request...")
                 message_content.append({
                     "type": "image_url",
                     "image_url": {
@@ -195,7 +259,6 @@ class AlfredEvaluator:
             })
             
             # Make the API call
-            print("📡 Making OpenAI API call...")
             response = self.client.chat.completions.create(
                 model=engine,
                 messages=[
@@ -207,23 +270,23 @@ class AlfredEvaluator:
                 max_tokens=300,
                 temperature=0.0
             )
-            print("✅ OpenAI response received!")
-            return response.choices[0].message.content
+            openai_response = response.choices[0].message.content
+
+
+            print(f"\nPrmopt to GPT4o-mini :\n{prompt}")
+            print(f"\nGPT4o-mini Response : \n{openai_response}")
+            
+
+            return openai_response
         
-        elif engine == "llama-3-vision":
-            print("🦙 Using Llama-3 Vision model...")
+        elif engine in ["llama-3-vision", "llama-3-vision-adapted"]:
             # Convert base64 image back to PIL Image if provided
             image = None
             if images and len(images) > 0:
-                print("🖼️ Converting base64 image to PIL...")
                 image_data = base64.b64decode(images[0])
                 image = Image.open(BytesIO(image_data))
-                print(f"✅ Image loaded: {image.size}")
-            else:
-                print("📝 No image provided - text-only mode")
             
             # Format messages for Llama
-            print("💬 Formatting messages for Llama...")
             messages = [
                 {"role": "user", "content": [
                     {"type": "image"} if image else {},
@@ -236,11 +299,8 @@ class AlfredEvaluator:
                 messages[0]["content"] = [{"type": "text", "text": prompt}]
             
             # Generate response
-            print("⚡ Generating response with Llama model...")
             with torch.no_grad():
-                print("🔄 Applying chat template...")
                 input_text = self.llama_processor.apply_chat_template(messages, add_generation_prompt=True)
-                print("🔄 Processing inputs...")
                 inputs = self.llama_processor(
                     image,
                     input_text,
@@ -248,42 +308,38 @@ class AlfredEvaluator:
                     return_tensors="pt"
                 ).to(self.llama_model.device)
                 
-                print("🎯 Generating text...")
                 output = self.llama_model.generate(**inputs, max_new_tokens=300, 
                                                    temperature=1.0,
                                                    do_sample=False # <- important for greedy decoding
                 )
                 # Decode only the new tokens (skip the input)
-                print("📝 Decoding response...")
                 generated_text = self.llama_processor.decode(output[0][inputs['input_ids'].shape[1]:], skip_special_tokens=True)
-                print("✅ Llama response generated!")
-                return generated_text.strip()
-        
+                llama_output = generated_text.strip()
+
+            print(f"Input to Llama :\n{messages}")
+            print(f"Llama output :\n{llama_output}")
+
+
+            # Online training code for adapted version
+            if do_train:
+                # Get response from the GPT-4o mini as the ground truth 
+                groundtruth = self.llm(prompt=prompt, engine="gpt-4o-mini", images=images, do_train=False)
+                
+                # Perform online training
+                self._train_llama_online(messages, groundtruth, image)
+
+            return llama_output
+
         elif engine == "mistral-7b-instruct":
-            print("🦙 Using Mistral-7B-Instruct model...")
-
-            # Mistral is a text-only model — image input will be ignored
-            if images and len(images) > 0:
-                print("📝 Images provided, but Mistral-7B-Instruct only supports text. Proceeding in text-only mode.")
-            else:
-                print("📝 No image provided - proceeding in text-only mode.")
-
             # Prepare messages in plain string format
-            print("💬 Formatting messages for Mistral...")
-            messages = [
-                {"role": "user", "content": prompt}
-            ]
+            messages = [{"role": "user", "content": prompt}]
 
             # Ensure pad_token is set
             if self.mistral_tokenizer.pad_token is None:
-                print("⚠️ Setting pad_token to eos_token")
                 self.mistral_tokenizer.pad_token = self.mistral_tokenizer.eos_token
 
-
-            # Generate response
-            print("⚡ Generating response with Mistral model...")
-            with torch.no_grad():
-                print("🔄 Applying chat template...")
+            # Generate response (inference) inside no_grad context
+            with torch.inference_mode():
                 inputs = self.mistral_tokenizer.apply_chat_template(
                     messages,
                     return_tensors="pt",
@@ -291,71 +347,96 @@ class AlfredEvaluator:
                     add_generation_prompt=True
                 ).to(self.mistral_model.device)
 
-                print("🎯 Generating text...")
                 generated_ids = self.mistral_model.generate(
                     inputs,
                     pad_token_id=self.mistral_tokenizer.eos_token_id,
-                    max_new_tokens=512,         # Reduce if OOM occurs
+                    max_new_tokens=512,
                     do_sample=False,
                     temperature=0.7,
                     top_p=0.95
                 )
-
-                print("📝 Decoding response...")
                 decoded_output = self.mistral_tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
+                mistral_output = decoded_output[0].strip()
 
-                print("✅ Mistral response generated!")
-                return decoded_output[0].strip()
+            # Perform online training if using the adapted model
+            if do_train:
+                groundtruth = self.llm(prompt=prompt, engine="gpt-4o-mini", images=images, do_train=False)
+                
+                # Perform online training (this method has its own gradient calculation)
+                self._train_mistral_online(messages, groundtruth)
 
+            return mistral_output
+        
         elif engine == "mistral-7b-instruct-adapted":
-            print("🦙 Using Mistral-7B-Instruct-adapted model...")
-
-            # Mistral is a text-only model — image input will be ignored
-            if images and len(images) > 0:
-                print("📝 Images provided, but Mistral-7B-Instruct only supports text. Proceeding in text-only mode.")
-            else:
-                print("📝 No image provided - proceeding in text-only mode.")
-
+            # Define preference for generating aligned HLPs
+            # TODO: Might have to change this preference
+            preference = "Generate a more detailed and smooth high-level plan that is easier to execute step by step. Make sure each step is clear and actionable."
+            
+            # For inference, always use the preference to guide generation
+            enhanced_prompt = f"{preference}\n\n{prompt}"
+            
             # Prepare messages in plain string format
-            print("💬 Formatting messages for Mistral...")
-            messages = [
-                {"role": "user", "content": prompt}
-            ]
+            print(f"Original Prompt :\n{prompt}")
+            print(f"Enhanced Prompt (with preference) :\n{enhanced_prompt}")
+            
+            messages = [{"role": "user", "content": enhanced_prompt}]
 
             # Ensure pad_token is set
             if self.mistral_tokenizer.pad_token is None:
-                print("⚠️ Setting pad_token to eos_token")
                 self.mistral_tokenizer.pad_token = self.mistral_tokenizer.eos_token
 
-            # TODO:Train using the first 40 datasamples 
-            # Generate response
-            print("⚡ Generating response with Mistral model...")
-            with torch.no_grad():
-                print("🔄 Applying chat template...")
+            # Generate response (inference) inside no_grad context
+            with torch.inference_mode():
                 inputs = self.mistral_tokenizer.apply_chat_template(
                     messages,
                     return_tensors="pt",
                     padding=True,
-                    add_generation_prompt=True
-                ).to(self.mistral_model.device)
+                    add_generation_prompt=True # when True the model echoed the input
+                ).to(self.mistral_model.device)    
 
-                print("🎯 Generating text...")
+                # Manually create attention_mask to avoid inference issues
+                attention_mask = (inputs != self.mistral_tokenizer.pad_token_id).long()
+
+                # Move to the model's device
+                inputs = inputs.to(self.mistral_model.device)
+                attention_mask = attention_mask.to(self.mistral_model.device)
+
+                print("[DEBUG] Inputs device =", inputs.device)
+                print("[DEBUG] Mistral model device =", next(self.mistral_model.parameters()).device)
+                print("[DEBUG] attention mask device =", attention_mask.device)
+
                 generated_ids = self.mistral_model.generate(
-                    inputs,
+                    input_ids=inputs,
+                    attention_mask=attention_mask,
                     pad_token_id=self.mistral_tokenizer.eos_token_id,
-                    max_new_tokens=512,         # Reduce if OOM occurs
+                    max_new_tokens=1000,
                     do_sample=False,
-                    temperature=0.7,
-                    top_p=0.95
+                    # temperature=0.7, # Since i do not sample and want a deterministic output
+                    # top_p=0.95
                 )
 
-                print("📝 Decoding response...")
                 decoded_output = self.mistral_tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
+                mistral_output = decoded_output[0].strip()
 
-                print("✅ Mistral response generated!")
-                return decoded_output[0].strip()
+            mistral_hlp = mistral_output
+            
+            print(f"\nInput Message to Adapted Mistral :\n{messages}")
+            print(f"\nAdapted Mistral Output : \n{mistral_output}")
+            
+            # Perform online training if using the adapted model
+            if do_train:
+                print(f"\n[TRAINING MODE] Training on this sample...")
+
+                # Generate synthetic aligned HLP using GPT-4o mini
+                synthetic_hlp = self.llm(prompt=enhanced_prompt, engine="gpt-4o-mini", images=images, do_train=False)
+                print(f"\nSynthetic Aligned HLP (target) : \n{synthetic_hlp}")
+
+                # Train the adapted model to generate the aligned HLP directly from task + preference
+                self._train_adapted_mistral(enhanced_prompt, mistral_hlp, synthetic_hlp)
+
+            return mistral_output
+        
         else:
-            print(f"❌ Engine {engine} is not supported!")
             raise ValueError(f"{engine} is not supported!")
 
     def encode_image(self, img):
@@ -373,7 +454,7 @@ class AlfredEvaluator:
         _, JPEG = cv2.imencode('.jpeg', numpy_img)
         return base64.b64encode(JPEG).decode('utf-8')
 
-    def evaluate_task(self, engine, traj_data, r_idx, dynamic=False, to_print=True, vision=False, ob=''):
+    def evaluate_task(self, engine, traj_data, r_idx, dynamic=False, to_print=True, vision=False, ob='',do_train=False):
         """Evaluate a single task"""
         # Initialize frame history and plan tracking
         frame_history = []
@@ -463,8 +544,23 @@ class AlfredEvaluator:
             log.debug(init_prompt)
             log.debug("=" * 50)
 
-        llm_out = self.llm(init_prompt, engine=engine, images=encoded_frames, stop=['\n'])
+        llm_out = self.llm(init_prompt, engine=engine, images=encoded_frames, stop=['\n'], do_train=do_train)
+        
+        print(f"[DEBUG] LLM Engine : {engine}")
         high_level_plans = self.clean_llm_output(llm_out)
+        print(f"[DEBUG] HLPs from {engine}:\n{high_level_plans}")
+        
+        # TRAINING 
+        if self.trainFinished == False:
+            # TODO : Change how the preference works in this case 
+            preference_prompt = init_prompt + " + The output should be more smooth"
+            
+            synthetic_llm_out = self.llm(preference_prompt, engine=self.config["llm_planner"]["synthetic_HLP_engine"], images=encoded_frames, stop=['\n'], do_train=do_train)
+
+            synthetic_high_level_plans = self.clean_llm_output(synthetic_llm_out)
+
+            print("[DEBUG] Synthetic HLPs \n", synthetic_high_level_plans)
+
         initial_high_level_plans = high_level_plans.copy()  # Store the initial plans
         
         # Display the full high-level plan more prominently
@@ -690,7 +786,7 @@ class AlfredEvaluator:
 
         return log_entry
                 
-    def run_evaluation(self, dry_run=False):
+    def run_evaluation(self, dry_run=False, do_train=False):
         """Run evaluation on all tasks"""
         results = []
         save_path = self.config["out_dir"]
@@ -701,61 +797,145 @@ class AlfredEvaluator:
             os.makedirs(save_path, exist_ok=True)
 
         if dry_run:
-            log.info("Dry run mode enabled. Only evaluating 3 task.")
-            self.tasks = self.tasks[:3]
+            log.info("Dry run mode enabled. Only evaluating 5 task.")
+            self.tasks = self.tasks[:5]
         
-        # Main eval loop
-        start = time.time()
-        for task_idx, task in tqdm(enumerate(self.tasks), 
-                                  desc="Tasks"):
-            try:
-                log.debug(task)
-                traj_data = load_task_json(task)
-                r_idx = task['repeat_idx']
-                log.debug(f"Evaluating ({task_idx+1}/{len(self.tasks)}): {traj_data['root']}")
-                
-                result = self.evaluate_task(
-                    self.config["llm_planner"]["engine"],
-                    traj_data, 
-                    r_idx,
-                    dynamic=self.config["llm_planner"]["dynamic"],
-                    vision=self.config["llm_planner"]["vision"]          
-                )
-                results.append(result)
-                
-                # Save result for debugging if enabled
-                if self.config.get("save_results", False):
-                    self.save_result(result, save_path)
+        # Configuration for adaptive training
+        
+        is_adapted_mistral = self.config["llm_planner"]["engine"] == "mistral-7b-instruct-adapted"
+        
+        if is_adapted_mistral and do_train:
+            log.info(f"Training mode enabled: Will train on first {self.training_samples} samples, then evaluate on remaining samples")
+            start = time.time()
+            self.trainFinished = False 
+            self.train_tasks = self.tasks[:self.training_samples]
+            self.evaluation_tasks = self.tasks[self.training_samples:]
 
-            except Exception as e:
-                import traceback
-                traceback.print_exc()
-                log.error(f"Error processing task {task_idx+1}/{len(self.tasks)}: {repr(e)}")
-                
-                # Create a failure result to keep tracking progress
+            start = time.time()
+
+            # Training 
+            for task_idx, task in tqdm(enumerate(self.train_tasks),
+                                       desc="Training adapted layers"):
                 try:
-                    failure_result = {
-                        'trial': task['task_id'] if 'task_id' in task else f"unknown_task_{task_idx}",
-                        'scene': f"scene_{task_idx}",
-                        'type': "failed",
-                        'repeat_idx': task['repeat_idx'] if 'repeat_idx' in task else 0,
-                        'goal_instr': "Task processing failed with exception",
-                        'inferred_steps': [f"ERROR: {repr(e)}"],
-                        'success': False
-                    }
-                    results.append(failure_result)
+                    log.debug(task)
+                    traj_data = load_task_json(task)
+                    r_idx = task['repeat_idx']
+                    log.debug(f"Evaluating ({task_idx+1}/{len(self.tasks)}): {traj_data['root']}")
+
+                    result = self.evaluate_task(
+                        self.config["llm_planner"]["engine"],
+                        traj_data, 
+                        r_idx,
+                        dynamic=self.config["llm_planner"]["dynamic"],
+                        vision=self.config["llm_planner"]["vision"],
+                        do_train=do_train         
+                    )
+                
+                except Exception as e: 
+                    print(e)
+
+            self.trainFinished = True 
+
+            # Evaluation after training the adapted layers
+            for task_idx, task in tqdm(enumerate(self.evaluation_tasks), 
+                                    desc="Tasks"):
+                try:
+                    log.debug(task)
+                    traj_data = load_task_json(task)
+                    r_idx = task['repeat_idx']
+                    log.debug(f"Evaluating ({task_idx+1}/{len(self.tasks)}): {traj_data['root']}")
                     
-                    # Save failure result if saving is enabled
+                    result = self.evaluate_task(
+                        self.config["llm_planner"]["engine"],
+                        traj_data, 
+                        r_idx,
+                        dynamic=self.config["llm_planner"]["dynamic"],
+                        vision=self.config["llm_planner"]["vision"]          
+                    )
+                    results.append(result)
+                    
+                    # Save result for debugging if enabled
                     if self.config.get("save_results", False):
-                        self.save_result(failure_result, save_path)
-                except:
-                    # If we can't even create a failure result, just continue
-                    log.error("Failed to create failure result entry")
+                        self.save_result(result, save_path)
+
+                except Exception as e:
+                    import traceback
+                    traceback.print_exc()
+                    log.error(f"Error processing task {task_idx+1}/{len(self.tasks)}: {repr(e)}")
+                    
+                    # Create a failure result to keep tracking progress
+                    try:
+                        failure_result = {
+                            'trial': task['task_id'] if 'task_id' in task else f"unknown_task_{task_idx}",
+                            'scene': f"scene_{task_idx}",
+                            'type': "failed",
+                            'repeat_idx': task['repeat_idx'] if 'repeat_idx' in task else 0,
+                            'goal_instr': "Task processing failed with exception",
+                            'inferred_steps': [f"ERROR: {repr(e)}"],
+                            'success': False
+                        }
+                        results.append(failure_result)
+                        
+                        # Save failure result if saving is enabled
+                        if self.config.get("save_results", False):
+                            self.save_result(failure_result, save_path)
+                    except:
+                        # If we can't even create a failure result, just continue
+                        log.error("Failed to create failure result entry")
+
+        else: # Normal Inference 
+             
+            for task_idx, task in tqdm(enumerate(self.tasks), 
+                                  desc="Tasks"):
+                try:
+                    log.debug(task)
+                    traj_data = load_task_json(task)
+                    r_idx = task['repeat_idx']
+                    log.debug(f"Evaluating ({task_idx+1}/{len(self.tasks)}): {traj_data['root']}")
+                    
+                    result = self.evaluate_task(
+                        self.config["llm_planner"]["engine"],
+                        traj_data, 
+                        r_idx,
+                        dynamic=self.config["llm_planner"]["dynamic"],
+                        vision=self.config["llm_planner"]["vision"]          
+                    )
+                    results.append(result)
+                    
+                    # Save result for debugging if enabled
+                    if self.config.get("save_results", False):
+                        self.save_result(result, save_path)
+
+                except Exception as e:
+                    import traceback
+                    traceback.print_exc()
+                    log.error(f"Error processing task {task_idx+1}/{len(self.tasks)}: {repr(e)}")
+                    
+                    # Create a failure result to keep tracking progress
+                    try:
+                        failure_result = {
+                            'trial': task['task_id'] if 'task_id' in task else f"unknown_task_{task_idx}",
+                            'scene': f"scene_{task_idx}",
+                            'type': "failed",
+                            'repeat_idx': task['repeat_idx'] if 'repeat_idx' in task else 0,
+                            'goal_instr': "Task processing failed with exception",
+                            'inferred_steps': [f"ERROR: {repr(e)}"],
+                            'success': False
+                        }
+                        results.append(failure_result)
+                        
+                        # Save failure result if saving is enabled
+                        if self.config.get("save_results", False):
+                            self.save_result(failure_result, save_path)
+                    except:
+                        # If we can't even create a failure result, just continue
+                        log.error("Failed to create failure result entry")
+                
         
         # Print results
         self._print_results(results, start)
         return results
-    
+
     def _print_results(self, results, start_time):
         """Print evaluation results"""
         n = len(results)
@@ -843,7 +1023,7 @@ class AlfredEvaluator:
         
         if do_preprocessing:
             log.info("\nPreprocessing dataset... Do this once as required:")
-            vocab = None  # todo
+            vocab = None  
             dataset = Dataset(dotdict(args_dict), vocab)
             dataset.preprocess_splits(self.splits)
 
@@ -858,14 +1038,19 @@ class AlfredEvaluator:
             list: List of cleaned plan steps
         """
         # Remove "Next Plans:" prefix if present
-        if "Next Plans:" in llm_out:
+        if self.config["llm_planner"]["engine"] in ["gpt-4o-mini","gpt-4o"] and "Next Plans:" in llm_out:
             cleaned_text = llm_out.split("Next Plans:")[1].strip()
+        elif self.config["llm_planner"]["engine"] in ["mistral-7b-instruct", "mistral-7b-instruct-adapted"]:
+            
+            cleaned_text = llm_out.split("[/INST]")[1].strip()
         else:
             cleaned_text = llm_out.strip()
         
+        print(f"[DEBUG] Cleaned text from {self.config['llm_planner']['engine']}:\n", cleaned_text)
         # Split by comma and strip whitespace from each item
         plans = [plan.strip() for plan in cleaned_text.split(',')]
-        
+
+
         return plans
 
     def match_object_name(self, generated_name, available_objects):
@@ -913,33 +1098,482 @@ class AlfredEvaluator:
             log.warning(f"Error during fuzzy object matching: {str(e)}")
             return None, 0
 
+    def _train_mistral_online(self, input_messages, ground_truth_response):
+        """
+        Perform online training of Mistral model using ground truth from GPT-4o mini.
+        
+        Args:
+            input_messages: Original input messages
+            ground_truth_response: Ground truth response from GPT-4o mini
+        """
+        try:
+            # Proactively clear memory
+            gc.collect()
+            torch.cuda.empty_cache()
+
+            # Set model to training mode
+            self.mistral_model.train()
+            
+            # Prepare the full conversation with ground truth as target
+            full_conversation = input_messages + [{"role": "assistant", "content": ground_truth_response}]
+            
+            # Tokenize the full conversation
+            tokenized = self.mistral_tokenizer.apply_chat_template(
+                full_conversation,
+                return_tensors="pt",
+                padding=True,
+                add_generation_prompt=False  # We want the full conversation including response
+            ).to(self.mistral_model.device)
+            
+            # Prepare input and target
+            input_ids = tokenized
+            target_ids = tokenized.clone()
+            
+            # Mask the input tokens in the target (we only want to compute loss on the response)
+            # Find where the assistant response starts
+            assistant_start_tokens = self.mistral_tokenizer.encode("assistant", add_special_tokens=False)
+            
+            # Create attention mask
+            attention_mask = torch.ones_like(input_ids)
+            
+            # Forward pass
+            with torch.amp.autocast():  # Use mixed precision for efficiency
+                outputs = self.mistral_model(
+                    input_ids=input_ids,
+                    attention_mask=attention_mask,
+                    labels=target_ids
+                )
+                loss = outputs.loss
+            
+            # Backward pass
+            loss.backward()
+            
+            # Gradient clipping to prevent exploding gradients
+            torch.nn.utils.clip_grad_norm_(self.mistral_model.parameters(), max_norm=1.0)
+            
+            # Update parameters using optimizer
+            self.mistral_optimizer.step()
+            
+            # Zero gradients for next iteration
+            self.mistral_optimizer.zero_grad()
+            
+            # Set model back to eval mode
+            self.mistral_model.eval()
+
+            # Checkpoint saving logic
+            self.training_step += 1
+            if self.training_step % self.save_every == 0:
+                checkpoint_path = os.path.join(self.checkpoint_dir, "mistral", f"step_{self.training_step}")
+                os.makedirs(checkpoint_path, exist_ok=True)
+                
+                # Save model and optimizer
+                self.mistral_model.save_pretrained(checkpoint_path)
+                torch.save(self.mistral_optimizer.state_dict(), os.path.join(checkpoint_path, "optimizer.pt"))
+            
+        except Exception as e:
+            # Ensure model is back in eval mode even if training fails
+            self.mistral_model.eval()
+            # Clear any accumulated gradients
+            self.mistral_optimizer.zero_grad()
+            # Clear CUDA cache to prevent memory issues
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            raise e
+
+    def _train_llama_online(self, input_messages, ground_truth_response, image=None):
+        """
+        Perform online training of Llama Vision model using ground truth from GPT-4o mini.
+        
+        Args:
+            input_messages: Original input messages
+            ground_truth_response: Ground truth response from GPT-4o mini
+            image: PIL Image object if vision input is provided
+        """
+        try:
+            # Proactively clear memory
+            gc.collect()
+            torch.cuda.empty_cache()
+
+            # Set model to training mode
+            self.llama_model.train()
+
+            # TODO: Freeze all the model parameters except Adapter Weights for model 
+
+            
+            # Prepare the full conversation with ground truth as target
+            full_conversation = input_messages + [{"role": "assistant", "content": ground_truth_response}]
+            
+            # Process inputs for training
+            input_text = self.llama_processor.apply_chat_template(
+                full_conversation, 
+                add_generation_prompt=False  # We want the full conversation including response
+            )
+            
+            # Process both image and text
+            inputs = self.llama_processor(
+                image,
+                input_text,
+                add_special_tokens=False,
+                return_tensors="pt"
+            ).to(self.llama_model.device)
+            
+            # Create labels (same as input_ids for causal LM)
+            labels = inputs['input_ids'].clone()
+            
+            # Find the assistant response start to mask previous tokens
+            # We only want to compute loss on the assistant's response
+            input_text_tokens = self.llama_processor.tokenizer.encode(
+                self.llama_processor.apply_chat_template(input_messages, add_generation_prompt=True),
+                add_special_tokens=False
+            )
+            assistant_start_idx = len(input_text_tokens)
+            
+            # Mask tokens before assistant response (set to -100 to ignore in loss)
+            if assistant_start_idx < labels.shape[1]:
+                labels[:, :assistant_start_idx] = -100
+            
+            # Forward pass
+            with torch.amp.autocast():  # Use mixed precision for efficiency
+                outputs = self.llama_model(
+                    input_ids=inputs['input_ids'],
+                    attention_mask=inputs.get('attention_mask'),
+                    pixel_values=inputs.get('pixel_values'),  # Vision input
+                    aspect_ratio_ids=inputs.get('aspect_ratio_ids'),  # Llama-specific
+                    aspect_ratio_mask=inputs.get('aspect_ratio_mask'),  # Llama-specific
+                    labels=labels
+                )
+                loss = outputs.loss
+            
+            # Backward pass
+            loss.backward()
+            
+            # Gradient clipping to prevent exploding gradients
+            torch.nn.utils.clip_grad_norm_(self.llama_model.parameters(), max_norm=1.0)
+            
+            # Update parameters using optimizer
+            self.llama_optimizer.step()
+            
+            # Zero gradients for next iteration
+            self.llama_optimizer.zero_grad()
+            
+            # Set model back to eval mode
+            self.llama_model.eval()
+
+            # Checkpoint saving logic
+            self.training_step += 1
+            if self.training_step % self.save_every == 0:
+                checkpoint_path = os.path.join(self.checkpoint_dir, "llama", f"step_{self.training_step}")
+                os.makedirs(checkpoint_path, exist_ok=True)
+                
+                # Save model and optimizer
+                self.llama_model.save_pretrained(checkpoint_path)
+                torch.save(self.llama_optimizer.state_dict(), os.path.join(checkpoint_path, "optimizer.pt"))
+            
+        except Exception as e:
+            # Ensure model is back in eval mode even if training fails
+            self.llama_model.eval()
+            # Clear any accumulated gradients
+            self.llama_optimizer.zero_grad()
+            # Clear CUDA cache to prevent memory issues
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            raise e
+
+
+    def _train_adapted_mistral(self, original_prompt, high_level_plans, synthetic_high_level_plans):
+        """
+        Perform online training of adapted Mistral model to generate aligned HLPs.
+        
+        Args:
+            original_prompt: The original input prompt that generated the HLP
+            high_level_plans: HLP generated by the adapted model (for comparison/logging)
+            synthetic_high_level_plans: More preference aligned HLP by GPT-4o (target)
+        """
+        try:
+            # Proactively clear memory
+            gc.collect()
+            torch.cuda.empty_cache()
+
+            # Set model to training mode
+            self.mistral_model.train()
+
+            # Ensure only adapter layers are trainable (if using LoRA/adapter approach)
+            for name, param in self.mistral_model.named_parameters():
+                if 'adapt' not in name.lower():
+                    param.requires_grad = False
+                else:
+                    param.requires_grad = True
+
+            # Print trainable parameters
+            trainable_params = sum(p.numel() for p in self.mistral_model.parameters() if p.requires_grad)
+            total_params = sum(p.numel() for p in self.mistral_model.parameters())
+            
+
+            
+            print("Trainable layers:")
+            for name, param in self.mistral_model.named_parameters():
+                if param.requires_grad:
+                    print(f"  {name}: {param.numel():,} parameters")
+
+            print(f"Trainable parameters: {trainable_params:,} / {total_params:,}")
+
+            # Zero gradients before training
+            self.mistral_optimizer.zero_grad()
+            
+            # Prepare the training conversation
+            training_messages = [
+                {"role": "user", "content": original_prompt},
+                {"role": "assistant", "content": synthetic_high_level_plans}
+            ]
+            
+            # Tokenize the full conversation
+            tokenized = self.mistral_tokenizer.apply_chat_template(
+                training_messages,
+                return_tensors="pt",
+                padding=True,
+                add_generation_prompt=False
+            ).to(self.mistral_model.device)
+            
+            # Prepare input and target
+            input_ids = tokenized
+            target_ids = tokenized.clone()
+            
+            # Find where the assistant response starts to mask input tokens
+            user_input_tokens = self.mistral_tokenizer.apply_chat_template(
+                [{"role": "user", "content": original_prompt}],
+                return_tensors="pt",
+                add_generation_prompt=True
+            ).to(self.mistral_model.device)
+            
+            # Mask tokens before assistant response (set to -100 to ignore in loss)
+            mask_length = user_input_tokens.shape[1]
+            if mask_length < target_ids.shape[1]:
+                target_ids[:, :mask_length] = -100
+            
+            # Create attention mask
+            attention_mask = torch.ones_like(input_ids)
+
+            # Forward pass with mixed precision
+            with torch.amp.autocast():
+                outputs = self.mistral_model(
+                    input_ids=input_ids,
+                    attention_mask=attention_mask,
+                    labels=target_ids
+                )
+                loss = outputs.loss
+            
+            print(f"[TRAINING] Loss: {loss.item():.4f}")
+            
+            # Store training metrics
+            training_metrics = {
+                "step": self.training_step + 1,
+                "loss": loss.item(),
+                "original_prompt": original_prompt,
+                "model_hlp": high_level_plans,
+                "target_hlp": synthetic_high_level_plans
+            }
+            
+            # Save training metrics to file
+            self._save_training_metrics(training_metrics)
+            
+            # Backward pass
+            loss.backward()
+            
+            # Gradient clipping to prevent exploding gradients
+            torch.nn.utils.clip_grad_norm_(
+                [p for p in self.mistral_model.parameters() if p.requires_grad], 
+                max_norm=1.0
+            )
+            
+            # Update parameters using optimizer
+            self.mistral_optimizer.step()
+            
+            # Zero gradients for next iteration
+            self.mistral_optimizer.zero_grad()
+            
+            # Set model back to eval mode
+            self.mistral_model.eval()
+
+            # Checkpoint saving logic
+            self.training_step += 1
+            if self.training_step % self.save_every == 0:
+                checkpoint_path = os.path.join(
+                    self.checkpoint_dir, "mistral_adapted", f"step_{self.training_step}"
+                )
+                os.makedirs(checkpoint_path, exist_ok=True)
+                
+                # Save model and optimizer
+                self.mistral_model.save_pretrained(checkpoint_path)
+                torch.save(
+                    self.mistral_optimizer.state_dict(), 
+                    os.path.join(checkpoint_path, "optimizer.pt")
+                )
+                
+                log.info(f"Checkpoint saved at step {self.training_step}")
+            
+        except Exception as e:
+            # Ensure model is back in eval mode even if training fails
+            self.mistral_model.eval()
+            # Clear any accumulated gradients
+            self.mistral_optimizer.zero_grad()
+            # Clear CUDA cache to prevent memory issues
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            log.error(f"Training failed: {str(e)}")
+            raise e
+        
+    def _save_final_adapted_model(self):
+        """Save the final adapted model after training phase completion."""
+        try:
+            final_model_path = os.path.join(self.checkpoint_dir, "mistral_adapted_final")
+            os.makedirs(final_model_path, exist_ok=True)
+            
+            # Save the final model
+            self.mistral_model.save_pretrained(final_model_path)
+            torch.save(self.mistral_optimizer.state_dict(), os.path.join(final_model_path, "optimizer.pt"))
+            
+            # Save training metadata
+            training_metadata = {
+                "total_training_steps": self.training_step,
+                "model_type": "mistral-7b-instruct-adapted",
+                "training_completed": True,
+                "timestamp": datetime.datetime.now().isoformat()
+            }
+            
+            with open(os.path.join(final_model_path, "training_metadata.json"), "w") as f:
+                json.dump(training_metadata, f, indent=2)
+            
+            log.info(f"Final adapted model saved to: {final_model_path}")
+            log.info(f"Total training steps completed: {self.training_step}")
+            
+            # Analyze and log training progress
+            self._analyze_training_progress()
+            
+        except Exception as e:
+            log.error(f"Failed to save final adapted model: {str(e)}")
+
+    def _measure_hlp_alignment(self, predicted_hlp, aligned_hlp):
+        """
+        Measure the alignment between predicted and target HLPs using semantic similarity.
+        
+        Args:
+            predicted_hlp: HLP generated by current model
+            aligned_hlp: Target aligned HLP from GPT-4o mini
+            
+        Returns:
+            float: Similarity score between 0 and 1
+        """
+        try:
+            # Clean the HLPs for comparison
+            # TODO: Check this after changing self.clean_llm_output
+            predicted_clean = self.clean_llm_output(predicted_hlp)
+            aligned_clean = self.clean_llm_output(aligned_hlp)
+            
+            # Convert to strings for embedding
+            predicted_str = ', '.join(predicted_clean)
+            aligned_str = ', '.join(aligned_clean)
+            
+            # Calculate semantic similarity using the sentence transformer
+            pred_embedding = self.obj_encoder.encode(predicted_str, convert_to_tensor=True, show_progress_bar=False)
+            aligned_embedding = self.obj_encoder.encode(aligned_str, convert_to_tensor=True, show_progress_bar=False)
+            
+            # Calculate cosine similarity
+            similarity = cos_sim(pred_embedding, aligned_embedding).item()
+            
+            return similarity
+            
+        except Exception as e:
+            log.warning(f"Failed to measure HLP alignment: {str(e)}")
+            return 0.0
+
+    def _save_training_metrics(self, metrics):
+        """
+        Save training metrics to a JSON file for progress tracking.
+        
+        Args:
+            metrics: Dictionary containing training metrics
+        """
+        try:
+            metrics_file = os.path.join(self.checkpoint_dir, "training_metrics.jsonl")
+            
+            # Append metrics to file (JSONL format)
+            with open(metrics_file, 'a') as f:
+                json.dump(metrics, f)
+                f.write('\n')
+                
+        except Exception as e:
+            log.warning(f"Failed to save training metrics: {str(e)}")
+
+    def _analyze_training_progress(self):
+        """
+        Analyze and log training progress from saved metrics.
+        """
+        try:
+            metrics_file = os.path.join(self.checkpoint_dir, "training_metrics.jsonl")
+            
+            if not os.path.exists(metrics_file):
+                return
+                
+            # Load all metrics
+            metrics = []
+            with open(metrics_file, 'r') as f:
+                for line in f:
+                    if line.strip():
+                        metrics.append(json.loads(line.strip()))
+            
+            if not metrics:
+                return
+                
+            # Calculate progress statistics
+            latest_metrics = metrics[-1]
+            first_metrics = metrics[0]
+            
+            # Calculate averages for recent steps
+            recent_steps = min(10, len(metrics))
+            recent_metrics = metrics[-recent_steps:]
+            
+            avg_loss = sum(m['loss'] for m in recent_metrics) / len(recent_metrics)
+            avg_alignment = sum(m['alignment_score'] for m in recent_metrics) / len(recent_metrics)
+            
+            # Log progress summary
+            log.info(f"Training Progress Summary:")
+            log.info(f"  Total steps: {len(metrics)}")
+            log.info(f"  Latest loss: {latest_metrics['loss']:.4f}")
+            log.info(f"  Latest alignment: {latest_metrics['alignment_score']:.4f}")
+            log.info(f"  Average loss (last {recent_steps} steps): {avg_loss:.4f}")
+            log.info(f"  Average alignment (last {recent_steps} steps): {avg_alignment:.4f}")
+            log.info(f"  Alignment improvement: {latest_metrics['alignment_score'] - first_metrics['alignment_score']:.4f}")
+            
+        except Exception as e:
+            log.warning(f"Failed to analyze training progress: {str(e)}")
+
 def main():
-    print("🎬 Starting ALFRED Evaluation Script...")
+
+    openai_config_file = "config/openai_config.yaml"
+    with open(openai_config_file) as reader:
+        openai_config = yaml.safe_load(reader)
+        OPENAI_API_KEY = openai_config["OPENAI_API_KEY"]
+        
+        # Set environment variable 
+        os.environ['OPENAI_API_KEY'] = OPENAI_API_KEY
     
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default='config/config_alfred.yaml')
     parser.add_argument('--dry_run', action='store_true')
     args = parser.parse_args()
-    
-    print(f"📁 Using config file: {args.config}")
-    if args.dry_run:
-        print("🧪 Running in DRY RUN mode (limited tasks)")
 
     # Initialize evaluator
-    print("🔧 Creating evaluator instance...")
     evaluator = AlfredEvaluator(args.config)
     
+    print("Args, config\n", args.config)
     # Run preprocess step only once on new installation
-    print("⚙️ Checking dataset preprocessing...")
     evaluator.preprocess_dataset()
     
     # Run evaluation
-    print("🏃 Starting task evaluation...")
-    results = evaluator.run_evaluation(dry_run=args.dry_run)
+    results = evaluator.run_evaluation(dry_run=args.dry_run, do_train=True)
     
     # Save results if configured
     if evaluator.config.get("save_results", False):
-        print("💾 Saving results to file...")
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         result_file = os.path.join(evaluator.config["out_dir"], f"results_{timestamp}.json")
         
@@ -952,14 +1586,6 @@ def main():
             
         with open(result_file, 'w') as f:
             json.dump(json_results, f, indent=2)
-        print(f"✅ Results saved to {result_file}")
-    
-    print("🏁 Evaluation complete!")
 
 if __name__ == '__main__':
     main()
-
-
-
-
-

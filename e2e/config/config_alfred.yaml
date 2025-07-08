@@ -6,6 +6,7 @@ save_results: True  # Enable saving results for debugging
 
 # llm_planner:
 #   engine: "gpt-4o-mini"
+#   synthetic_generation_engine = "gpt-4o-mini"
 #   vision: False
 #   dynamic: False
 #   max_retries: 1  # Maximum number of retries per action

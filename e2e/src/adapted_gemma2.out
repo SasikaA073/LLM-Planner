@@ -1,0 +1,290 @@
+Found path: /home/smartt1/.ai2thor/releases/thor-201909061227-Linux64/thor-201909061227-Linux64
+Mono path[0] = '/home/smartt1/.ai2thor/releases/thor-201909061227-Linux64/thor-201909061227-Linux64_Data/Managed'
+Mono config path = '/home/smartt1/.ai2thor/releases/thor-201909061227-Linux64/thor-201909061227-Linux64_Data/Mono/etc'
+Preloaded 'ScreenSelector.so'
+Display 0 'DELL E2417H 24"': 1920x1080 (primary device).
+Display 1 'DELL U2312HM 23"': 1920x1080 (secondary device).
+Logging to /home/smartt1/.config/unity3d/Allen Institute for Artificial Intelligence/AI2-Thor/Player.log
+ThorEnv started.
+Initializing Gemma 2 9B instruct 
+
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]
+Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:02,  1.03it/s]
+Loading checkpoint shards:  50%|█████     | 2/4 [00:01<00:01,  1.04it/s]
+Loading checkpoint shards:  75%|███████▌  | 3/4 [00:02<00:00,  1.05it/s]
+Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.15it/s]
+Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.11it/s]
+Gemma 2 model is loaded
+[GEMMA 2 Model Architecure]
+Injecting DCT Adapters...
+[DEBUG] model.layers.41.self_attn.q_proj.1.adapter_gate_logits - dtype: torch.float16, device: cuda:0
+[DEBUG] model.layers.41.self_attn.q_proj.1.adapter_down.weight - dtype: torch.float16, device: cuda:0
+[DEBUG] model.layers.41.self_attn.q_proj.1.adapter_up.weight - dtype: torch.float16, device: cuda:0
+[DEBUG] model.layers.41.self_attn.k_proj.1.adapter_gate_logits - dtype: torch.float16, device: cuda:0
+[DEBUG] model.layers.41.self_attn.k_proj.1.adapter_down.weight - dtype: torch.float16, device: cuda:0
+[DEBUG] model.layers.41.self_attn.k_proj.1.adapter_up.weight - dtype: torch.float16, device: cuda:0
+[DEBUG] model.layers.41.self_attn.v_proj.1.adapter_gate_logits - dtype: torch.float16, device: cuda:0
+[DEBUG] model.layers.41.self_attn.v_proj.1.adapter_down.weight - dtype: torch.float16, device: cuda:0
+[DEBUG] model.layers.41.self_attn.v_proj.1.adapter_up.weight - dtype: torch.float16, device: cuda:0
+[DEBUG] model.layers.41.self_attn.o_proj.1.adapter_gate_logits - dtype: torch.float16, device: cuda:0
+[DEBUG] model.layers.41.self_attn.o_proj.1.adapter_down.weight - dtype: torch.float16, device: cuda:0
+[DEBUG] model.layers.41.self_attn.o_proj.1.adapter_up.weight - dtype: torch.float16, device: cuda:0
+✅ Adapted Gemma2 model ready!
+[DEBUG] trainable params :
+<filter object at 0x78413b7d4340>
+Adapter Configuration : 
+{'models': [{'name': 'gemma-2-9b-it-adapted'}], 'adapter': {'do_adapt': True, 'do_peft': False, 'name': 'MyCustomAdapter', 'params': {'input_dim': 4096, 'num_components': 512}, 'gemma_2_params': {'input_dim': 4096, 'num_components': 512}, 'gemma_2_layers': [{'name': 'model.layers.41.self_attn.q_proj'}, {'name': 'model.layers.41.self_attn.k_proj'}, {'name': 'model.layers.41.self_attn.v_proj'}, {'name': 'model.layers.41.self_attn.o_proj'}], 'layers': None}, 'train': {'do_train': True, 'epochs': 100, 'batch_size': 1, 'lr': 0.0001, 'num_workers': 0}}
+[Adpated model archi] Gemma2ForCausalLM(
+  (model): Gemma2Model(
+    (embed_tokens): Embedding(256000, 3584, padding_idx=0)
+    (layers): ModuleList(
+      (0-40): 41 x Gemma2DecoderLayer(
+        (self_attn): Gemma2Attention(
+          (q_proj): Linear(in_features=3584, out_features=4096, bias=False)
+          (k_proj): Linear(in_features=3584, out_features=2048, bias=False)
+          (v_proj): Linear(in_features=3584, out_features=2048, bias=False)
+          (o_proj): Linear(in_features=4096, out_features=3584, bias=False)
+          (rotary_emb): Gemma2RotaryEmbedding()
+        )
+        (mlp): Gemma2MLP(
+          (gate_proj): Linear(in_features=3584, out_features=14336, bias=False)
+          (up_proj): Linear(in_features=3584, out_features=14336, bias=False)
+          (down_proj): Linear(in_features=14336, out_features=3584, bias=False)
+          (act_fn): PytorchGELUTanh()
+        )
+        (input_layernorm): Gemma2RMSNorm((3584,), eps=1e-06)
+        (pre_feedforward_layernorm): Gemma2RMSNorm((3584,), eps=1e-06)
+        (post_feedforward_layernorm): Gemma2RMSNorm((3584,), eps=1e-06)
+        (post_attention_layernorm): Gemma2RMSNorm((3584,), eps=1e-06)
+      )
+      (41): Gemma2DecoderLayer(
+        (self_attn): Gemma2Attention(
+          (q_proj): Sequential(
+            (0): Linear(in_features=3584, out_features=4096, bias=False)
+            (1): DCTAdapter(
+              (adapter_down): Linear(in_features=4096, out_features=18, bias=False)
+              (adapter_up): Linear(in_features=18, out_features=4096, bias=False)
+            )
+          )
+          (k_proj): Sequential(
+            (0): Linear(in_features=3584, out_features=2048, bias=False)
+            (1): DCTAdapter(
+              (adapter_down): Linear(in_features=2048, out_features=18, bias=False)
+              (adapter_up): Linear(in_features=18, out_features=2048, bias=False)
+            )
+          )
+          (v_proj): Sequential(
+            (0): Linear(in_features=3584, out_features=2048, bias=False)
+            (1): DCTAdapter(
+              (adapter_down): Linear(in_features=2048, out_features=18, bias=False)
+              (adapter_up): Linear(in_features=18, out_features=2048, bias=False)
+            )
+          )
+          (o_proj): Sequential(
+            (0): Linear(in_features=4096, out_features=3584, bias=False)
+            (1): DCTAdapter(
+              (adapter_down): Linear(in_features=3584, out_features=18, bias=False)
+              (adapter_up): Linear(in_features=18, out_features=3584, bias=False)
+            )
+          )
+          (rotary_emb): Gemma2RotaryEmbedding()
+        )
+        (mlp): Gemma2MLP(
+          (gate_proj): Linear(in_features=3584, out_features=14336, bias=False)
+          (up_proj): Linear(in_features=3584, out_features=14336, bias=False)
+          (down_proj): Linear(in_features=14336, out_features=3584, bias=False)
+          (act_fn): PytorchGELUTanh()
+        )
+        (input_layernorm): Gemma2RMSNorm((3584,), eps=1e-06)
+        (pre_feedforward_layernorm): Gemma2RMSNorm((3584,), eps=1e-06)
+        (post_feedforward_layernorm): Gemma2RMSNorm((3584,), eps=1e-06)
+        (post_attention_layernorm): Gemma2RMSNorm((3584,), eps=1e-06)
+      )
+    )
+    (norm): Gemma2RMSNorm((3584,), eps=1e-06)
+  )
+  (lm_head): Linear(in_features=3584, out_features=256000, bias=False)
+)
+Args, config
+ config/config_alfred.yaml
+
+Tasks: 0it [00:00, ?it/s]Resetting ThorEnv
+[DEBUG] LLM output from : gemma-2-9b-it-adapted 
+<bos>Create a high-level plan for completing a household task using the allowed actions. Follow the exact output format described in the examples. Only output the next steps of the plan. Always try to navigate to the object before interacting with it.
+
+
+Allowed actions: OpenObject, CloseObject, PickupObject, PutObject, ToggleObjectOn, ToggleObjectOff, SliceObject, Navigation
+
+IMPORTANT: Only use objects from this list: AlarmClock, Apple, ArmChair, BaseballBat, BasketBall, Bathtub, BathtubBasin, Bed, Blinds, Book, Boots, Bowl, Box, Bread, ButterKnife, Cabinet, Candle, Cart, CD, CellPhone, Chair, Cloth, CoffeeMachine, CounterTop, CreditCard, Cup, Curtains, Desk, DeskLamp, DishSponge, Drawer, Dresser, Egg, FloorLamp, Footstool, Fork, Fridge, GarbageCan, Glassbottle, HandTowel, HandTowelHolder, HousePlant, Kettle, KeyChain, Knife, Ladle, Laptop, LaundryHamper, LaundryHamperLid, Lettuce, LightSwitch, Microwave, Mirror, Mug, Newspaper, Ottoman, Painting, Pan, PaperTowel, PaperTowelRoll, Pen, Pencil, PepperShaker, Pillow, Plate, Plunger, Poster, Pot, Potato, RemoteControl, Safe, SaltShaker, ScrubBrush, Shelf, ShowerDoor, ShowerGlass, Sink, SinkBasin, SoapBar, SoapBottle, Sofa, Spatula, Spoon, SprayBottle, Statue, StoveBurner, StoveKnob, DiningTable, CoffeeTable, SideTable, TeddyBear, Television, TennisRacket, TissueBox, Toaster, Toilet, ToiletPaper, ToiletPaperHanger, ToiletPaperRoll, Tomato, Towel, TowelHolder, TVStand, Vase, Watch, WateringCan, Window, WineBottle
+
+Task description: Move the pot with a potato slice from the freezer to the sink.
+Completed plans: Navigation sinkbasin, PickupObject butterknife, Navigation potato, SliceObject potato, PutObject butterknife countertop
+Next Plans: PickupObject potatosliced, Navigation pot, OpenObject fridge, PutObject potatosliced pot, PickupObject pot, CloseObject fridge, Navigation sinkbasin, PutObject pot sink
+
+Task description: Put a washed potato slice on the white table
+Completed plans: Navigation countertop, PickupObject knife, Navigation potato, OpenObject microwave, SliceObject potato, CloseObject microwave, Navigation microwave, OpenObject microwave, PutObject knife microwave, CloseObject microwave, Navigation microwave, OpenObject microwave, PickupObject potatosliced, CloseObject microwave, Navigation sinkbasin, PutObject potatosliced sink, ToggleObjectOn faucet, ToggleObjectOff faucet, PickupObject potatosliced, Navigation diningtable
+Next Plans: PutObject potatosliced diningtable
+
+Task description: Place a cooled potato slice on a table. 
+Completed plans: Navigation countertop, PickupObject butterknife, Navigation potato, OpenObject microwave, SliceObject potato, CloseObject microwave, Navigation fridge, OpenObject fridge, PutObject butterknife fridge, CloseObject fridge, Navigation microwave, OpenObject microwave, PickupObject potatosliced, CloseObject microwave, Navigation fridge, OpenObject fridge, PutObject potatosliced fridge, CloseObject fridge, OpenObject fridge, PickupObject potatosliced, CloseObject fridge
+Next Plans: Navigation diningtable, PutObject potatosliced diningtable
+
+Task description: Slice a potato, rinse one slice.
+Completed plans: Navigation diningtable, PickupObject potato, Navigation countertop, PutObject potato countertop, Navigation countertop, PickupObject knife, Navigation potato, SliceObject potato, PutObject knife countertop
+Next Plans: PickupObject potatosliced, Navigation sinkbasin, PutObject potatosliced sink, ToggleObjectOn faucet, ToggleObjectOff faucet, PickupObject potatosliced, Navigation countertop, PutObject potatosliced countertop
+
+Task description: slice a tomato and place a warmed up slice near the sink
+Completed plans: Navigation diningtable, PickupObject knife, Navigation tomato, SliceObject tomato, Navigation sinkbasin, PutObject knife sink, Navigation diningtable, PickupObject tomatosliced
+Next Plans: Navigation microwave, OpenObject microwave, PutObject tomatosliced microwave, CloseObject microwave, ToggleObjectOn microwave, ToggleObjectOff microwave, OpenObject microwave, PickupObject tomatosliced, CloseObject microwave, Navigation sinkbasin, PutObject tomatosliced sink
+
+Task description: Put a heated potato slice in the fridge.
+Completed plans: Navigation diningtable, PickupObject knife, Navigation potato, SliceObject potato, Navigation microwave, OpenObject microwave, PutObject knife microwave, CloseObject microwave, Navigation diningtable, PickupObject potatosliced, Navigation microwave, OpenObject microwave, PutObject potatosliced microwave, CloseObject microwave, ToggleObjectOn microwave, ToggleObjectOff microwave, OpenObject microwave, PickupObject potatosliced
+Next Plans: CloseObject microwave, Navigation fridge, OpenObject fridge, PutObject potatosliced fridge, CloseObject fridge
+
+Task description: Slice the potato using the knife.  Put the knife in the fridge with the potato in the pan. 
+Completed plans: Navigation diningtable, PickupObject knife, Navigation potato, SliceObject potato, Navigation fridge, OpenObject fridge, PutObject knife fridge
+Next Plans: CloseObject fridge, Navigation diningtable, PickupObject potatosliced, Navigation pot, PutObject potatosliced pot, PickupObject pot, Navigation fridge, OpenObject fridge, PutObject pot fridge, CloseObject fridge
+
+Task description: Slice a potato, cook a slice, put it in the fridge
+Completed plans: Navigation countertop, PickupObject butterknife, Navigation potato, OpenObject fridge, SliceObject potato, CloseObject fridge, Navigation sinkbasin, PutObject butterknife sink, Navigation fridge
+Next Plans: OpenObject fridge, PickupObject potatosliced, CloseObject fridge, Navigation microwave, OpenObject microwave, PutObject potatosliced microwave, CloseObject microwave, ToggleObjectOn microwave, ToggleObjectOff microwave, OpenObject microwave, PickupObject potatosliced, CloseObject microwave, Navigation fridge, OpenObject fridge, PutObject potatosliced fridge, CloseObject fridge
+
+Task description: Put a washed slice of potato in the microwave.
+Completed plans: Navigation countertop, PickupObject butterknife, Navigation potato, SliceObject potato, Navigation microwave, OpenObject microwave, PutObject butterknife microwave, CloseObject microwave, Navigation diningtable, PickupObject potatosliced, Navigation sinkbasin, PutObject potatosliced sink, ToggleObjectOn faucet, ToggleObjectOff faucet, PickupObject potatosliced
+Next Plans: Navigation microwave, OpenObject microwave, PutObject potatosliced microwave, CloseObject microwave
+
+Task description: Place a cooked potato slice in the sink
+Completed plans: 
+Next Plans:<pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad>
+Tasks: 1it [00:34, 34.33s/it]
+Tasks: 1it [00:34, 34.33s/it]
+
+Instruction: <bos>Create a high-level plan for completing a household task using the allowed actions. Follow the exact output format described in the examples. Only output the next steps of the plan. Always try to navigate to the object before interacting with it.
+
+
+Allowed actions: OpenObject
+Instruction: CloseObject
+Instruction: PickupObject
+Instruction: PutObject
+Instruction: ToggleObjectOn
+Instruction: ToggleObjectOff
+Instruction: SliceObject
+Instruction: Navigation
+
+IMPORTANT: Only use objects from this list: AlarmClock
+Instruction: Apple
+Instruction: ArmChair
+Instruction: BaseballBat
+Instruction: BasketBall
+Instruction: Bathtub
+Instruction: BathtubBasin
+Instruction: Bed
+Instruction: Blinds
+Instruction: Book
+Instruction: Boots
+Instruction: Bowl
+Instruction: Box
+Instruction: Bread
+Instruction: ButterKnife
+Instruction: Cabinet
+Instruction: Candle
+Instruction: Cart
+Instruction: CD
+Instruction: CellPhone
+Instruction: Chair
+Instruction: Cloth
+Instruction: CoffeeMachine
+Instruction: CounterTop
+Instruction: CreditCard
+Instruction: Cup
+Instruction: Curtains
+Instruction: Desk
+Instruction: DeskLamp
+Instruction: DishSponge
+Instruction: Drawer
+Instruction: Dresser
+Instruction: Egg
+Instruction: FloorLamp
+Instruction: Footstool
+Instruction: Fork
+Instruction: Fridge
+Instruction: GarbageCan
+Instruction: Glassbottle
+Instruction: HandTowel
+Instruction: HandTowelHolder
+Instruction: HousePlant
+Instruction: Kettle
+Instruction: KeyChain
+Instruction: Knife
+Instruction: Ladle
+Instruction: Laptop
+Instruction: LaundryHamper
+Instruction: LaundryHamperLid
+Instruction: Lettuce
+Instruction: LightSwitch
+Instruction: Microwave
+Instruction: Mirror
+Instruction: Mug
+Instruction: Newspaper
+Instruction: Ottoman
+Instruction: Painting
+Instruction: Pan
+Instruction: PaperTowel
+Instruction: PaperTowelRoll
+Instruction: Pen
+Instruction: Pencil
+Instruction: PepperShaker
+Instruction: Pillow
+Instruction: Plate
+Instruction: Plunger
+Instruction: Poster
+Instruction: Pot
+Instruction: Potato
+Instruction: RemoteControl
+Instruction: Safe
+Instruction: SaltShaker
+Instruction: ScrubBrush
+Instruction: Shelf
+Instruction: ShowerDoor
+Instruction: ShowerGlass
+Instruction: Sink
+Instruction: SinkBasin
+Instruction: SoapBar
+Instruction: SoapBottle
+Instruction: Sofa
+Instruction: Spatula
+Instruction: Spoon
+Instruction: SprayBottle
+Instruction: Statue
+Instruction: StoveBurner
+Instruction: StoveKnob
+Instruction: DiningTable
+Instruction: CoffeeTable
+Instruction: SideTable
+Instruction: TeddyBear
+Instruction: Television
+Instruction: TennisRacket
+Instruction: TissueBox
+Instruction: Toaster
+Instruction: Toilet
+Instruction: ToiletPaper
+Instruction: ToiletPaperHanger
+Instruction: ToiletPaperRoll
+Instruction: Tomato
+Instruction: Towel
+Instruction: TowelHolder
+Instruction: TVStand
+Instruction: Vase
+Instruction: Watch
+Instruction: WateringCan
+Instruction: Window
+Instruction: WineBottle
+
+Task description: Move the pot with a potato slice from the freezer to the sink.
+Completed plans: Navigation sinkbasin
+Instruction: rinse one slice.
+Completed plans: Navigation diningtable
+Instruction: cook a slice
+Instruction: put it in the fridge
+Completed plans: Navigation countertop
+success rate: 0.00 % (0/1)

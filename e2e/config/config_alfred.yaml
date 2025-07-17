@@ -1,51 +1,25 @@
 name: alfred
 
 out_dir: "./"
-debug: False # Used to debug a single task. Modify the line mentioned by NOTE in src/run_eval.py
+debug: False # TODO: CHange this later, Used to debug a single task. Modify the line mentioned by NOTE in src/run_eval.py
 save_results: True  # Enable saving results for debugging
 
-# llm_planner:
-#   engine: "gpt-4o-mini"
-#   synthetic_generation_engine = "gpt-4o-mini"
-#   vision: False
-#   dynamic: False
-#   max_retries: 1  # Maximum number of retries per action
-#   max_replanning: 5  # Maximum number of dynamic replanning attempts per task
-#   knn_dataset_path: "src/knn_set.pkl"
-#   emb_model_name: "paraphrase-MiniLM-L6-v2"
-#   num_in_context_examples: 9
-#   use_step_instructions: False  # Set to False to disable step instructions
-#   obj_sim_threshold: 0.8  # Threshold for fuzzy object matching (0.0 to 1.0)
-#   debug: True
-
-# llm_planner:
-#   engine: "llama-3-vision"
-#   vision: True
-#   dynamic: False
-#   max_retries: 1  # Maximum number of retries per action
-#   max_replanning: 5  # Maximum number of dynamic replanning attempts per task
-#   knn_dataset_path: "src/knn_set.pkl"
-#   emb_model_name: "paraphrase-MiniLM-L6-v2"
-#   num_in_context_examples: 9
-#   use_step_instructions: False  # Set to False to disable step instructions
-#   obj_sim_threshold: 0.8  # Threshold for fuzzy object matching (0.0 to 1.0)
-#   debug: True
-
-# llm_planner:
-#   engine: "mistral-7b-instruct"
-#   vision: False
-#   dynamic: False
-#   max_retries: 1  # Maximum number of retries per action
-#   max_replanning: 5  # Maximum number of dynamic replanning attempts per task
-#   knn_dataset_path: "src/knn_set.pkl"
-#   emb_model_name: "paraphrase-MiniLM-L6-v2"
-#   num_in_context_examples: 9
-#   use_step_instructions: False  # Set to False to disable step instructions
-#   obj_sim_threshold: 0.8  # Threshold for fuzzy object matching (0.0 to 1.0)
-#   debug: True
-
 llm_planner:
-  engine: "mistral-7b-instruct-adapted"
+  # engine: "gpt-4o-mini" # checked
+  # engine: "gpt-4o" # checked
+  # engine: "llama-3-vision"
+  # engine: "mistral-7b-instruct" # checked
+  # engine: "mistral-7b-instruct-adapted" # checked
+  # engine: "qwen2.5-3B-instruct" 
+  # engine: "gemma-3-4b-it" # to be checked (transformers 4.50. and python3.9> )
+  # engine: "gemma-2-9b-it" # checked
+  # enigine: "pixtral"  # Need more VRAM 
+  engine: "gemma-2-9b-it-adapted" # to be checked 
+
+  synthetic_HLP_engine: "gpt-4o-mini"
+  n_training_samples : 1
+  n_dry_run_samples : 3
+
   vision: False
   dynamic: False
   max_retries: 1  # Maximum number of retries per action
@@ -55,7 +29,10 @@ llm_planner:
   num_in_context_examples: 9
   use_step_instructions: False  # Set to False to disable step instructions
   obj_sim_threshold: 0.8  # Threshold for fuzzy object matching (0.0 to 1.0)
-  debug: True
+  debug: False
+
+adapt: 
+  do_adapt: True 
 
 alfred:
   env_args:
@@ -65,7 +42,7 @@ alfred:
     reward_config: alfred/models/config/rewards.json
     max_steps: 1000
     pp_folder: pp
-    headless: true
   x_display: '1'
-  eval_set: 'valid_unseen'  # valid_seen, valid_unseen
+  eval_set: 'valid_seen'  # valid_seen, valid_unseen
   splits: alfred/data/splits/oct21.json
+

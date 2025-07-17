@@ -1,0 +1,43 @@
+models:
+  - name: gemma-2-9b-it-adapted
+   
+adapter:
+  do_adapt: true
+  do_peft: false
+  name: MyCustomAdapter
+  params:
+    # input_dim: 768 # this for florence base
+    # in_features: 4096 
+    input_dim: 4096
+    num_components: 512
+
+  gemma_2_params:
+    # input_dim: 768 # this for florence base
+    # in_features: 4096 
+    input_dim: 4096
+    num_components: 512
+
+  gemma_2_layers: 
+    - name: model.layers.41.self_attn.q_proj
+    - name: model.layers.41.self_attn.k_proj
+    - name: model.layers.41.self_attn.v_proj
+    - name: model.layers.41.self_attn.o_proj
+
+    # FOR GEMMA 2 Model 
+  
+  
+  layers: 
+
+    # FOR MISTRAL MODEL 
+    # - name: model.layers.31.self_attn.q_proj
+    # - name: model.layers.31.self_attn.k_proj
+    # - name: model.layers.31.self_attn.v_proj 
+    # - name: model.layers.31.self_attn.o_proj
+    # - name: lm_head
+
+train:
+  do_train: true
+  epochs: 100
+  batch_size: 1
+  lr: 0.0001
+  num_workers: 0

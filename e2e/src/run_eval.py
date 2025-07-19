@@ -55,6 +55,8 @@ log = logging.getLogger(__name__)
 logging.getLogger("openai").setLevel(logging.ERROR)
 logging.getLogger("httpx").setLevel(logging.ERROR)
 
+gc.collect()
+torch.cuda.empty_cache()
 class AlfredEvaluator:
     def __init__(self, config_file):
         # Load configuration
@@ -142,7 +144,7 @@ class AlfredEvaluator:
             self.mistral_model = AutoModelForCausalLM.from_pretrained(
                 model_id, 
                 torch_dtype=torch.float16,
-                device_map="auto", # Use auto for better distribution
+                device_map="cuda", # Use auto for better distribution
                 load_in_8bit=True  # 8-bit quantization
             )
             self.mistral_tokenizer = AutoTokenizer.from_pretrained(model_id)
@@ -158,7 +160,7 @@ class AlfredEvaluator:
             self.mistral_model = AutoModelForCausalLM.from_pretrained(
                 model_id, 
                 torch_dtype=torch.float16,
-                device_map="auto", # Use auto for better distribution
+                device_map="cuda", # Use auto for better distribution
                 load_in_8bit=True  # 8-bit quantization
             )
             print("📥 Loading tokenizer...")
@@ -236,7 +238,7 @@ class AlfredEvaluator:
             self.gemma2_tokenizer = AutoTokenizer.from_pretrained("google/gemma-2-9b-it")
             self.gemma2_model = AutoModelForCausalLM.from_pretrained(
                 "google/gemma-2-9b-it",
-                device_map="auto",
+                device_map="cuda",
                 torch_dtype=torch.float16,
             )
 
@@ -253,7 +255,7 @@ class AlfredEvaluator:
             self.gemma2_tokenizer = AutoTokenizer.from_pretrained(model_id)
             self.gemma2_model = AutoModelForCausalLM.from_pretrained(
                 model_id,
-                device_map="auto",
+                device_map="cuda",
                 torch_dtype=torch.float16,
             )
 
@@ -733,9 +735,7 @@ class AlfredEvaluator:
             print("[DEBUG] Adapted model HLPs \n", high_level_plans)
             print("[DEBUG] Synthetic HLPs \n", synthetic_high_level_plans)
 
-            if engine=="mistral-7b-instruct-adapted":
-                self._train_adapted_mistral(preference_prompt, original_HLP=high_level_plans, synthetic_HLP=synthetic_high_level_plans)
-            elif engine=="gemma-2-9b-it-adapted":
+            if engine=="gemma-2-9b-it-adapted":
                 self._train_adapted_gemma_2(preference_prompt, original_HLP=high_level_plans, synthetic_HLP=synthetic_high_level_plans )
             
 
@@ -1292,341 +1292,6 @@ class AlfredEvaluator:
         except Exception as e:
             log.warning(f"Error during fuzzy object matching: {str(e)}")
             return None, 0
-
-    def _train_mistral_online(self, input_messages, ground_truth_response):
-        """
-        Perform online training of Mistral model using ground truth from GPT-4o mini.
-        
-        Args:
-            input_messages: Original input messages
-            ground_truth_response: Ground truth response from GPT-4o mini
-        """
-        try:
-            # Proactively clear memory
-            gc.collect()
-            torch.cuda.empty_cache()
-
-            # Set model to training mode
-            self.mistral_model.train()
-            
-            # Prepare the full conversation with ground truth as target
-            full_conversation = input_messages + [{"role": "assistant", "content": ground_truth_response}]
-            
-            # Tokenize the full conversation
-            tokenized = self.mistral_tokenizer.apply_chat_template(
-                full_conversation,
-                return_tensors="pt",
-                padding=True,
-                add_generation_prompt=False  # We want the full conversation including response
-            ).to(self.mistral_model.device)
-            
-            # Prepare input and target
-            input_ids = tokenized
-            target_ids = tokenized.clone()
-            
-            # Mask the input tokens in the target (we only want to compute loss on the response)
-            # Find where the assistant response starts
-            assistant_start_tokens = self.mistral_tokenizer.encode("assistant", add_special_tokens=False)
-            
-            # Create attention mask
-            attention_mask = torch.ones_like(input_ids)
-            
-            # Forward pass
-            with torch.amp.autocast():  # Use mixed precision for efficiency
-                outputs = self.mistral_model(
-                    input_ids=input_ids,
-                    attention_mask=attention_mask,
-                    labels=target_ids
-                )
-                loss = outputs.loss
-            
-            # Backward pass
-            loss.backward()
-            
-            # Gradient clipping to prevent exploding gradients
-            torch.nn.utils.clip_grad_norm_(self.mistral_model.parameters(), max_norm=1.0)
-            
-            # Update parameters using optimizer
-            self.mistral_optimizer.step()
-            
-            # Zero gradients for next iteration
-            self.mistral_optimizer.zero_grad()
-            
-            # Set model back to eval mode
-            self.mistral_model.eval()
-
-            # Checkpoint saving logic
-            self.training_step += 1
-            if self.training_step % self.save_every == 0:
-                checkpoint_path = os.path.join(self.checkpoint_dir, "mistral", f"step_{self.training_step}")
-                os.makedirs(checkpoint_path, exist_ok=True)
-                
-                # Save model and optimizer
-                self.mistral_model.save_pretrained(checkpoint_path)
-                torch.save(self.mistral_optimizer.state_dict(), os.path.join(checkpoint_path, "optimizer.pt"))
-            
-        except Exception as e:
-            # Ensure model is back in eval mode even if training fails
-            self.mistral_model.eval()
-            # Clear any accumulated gradients
-            self.mistral_optimizer.zero_grad()
-            # Clear CUDA cache to prevent memory issues
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
-            raise e
-
-    def _train_llama_online(self, input_messages, ground_truth_response, image=None):
-        """
-        Perform online training of Llama Vision model using ground truth from GPT-4o mini.
-        
-        Args:
-            input_messages: Original input messages
-            ground_truth_response: Ground truth response from GPT-4o mini
-            image: PIL Image object if vision input is provided
-        """
-        try:
-            # Proactively clear memory
-            gc.collect()
-            torch.cuda.empty_cache()
-
-            # Set model to training mode
-            self.llama_model.train()
-
-            # Freeze all the model parameters except Adapter Weights for model 
-
-            
-            # Prepare the full conversation with ground truth as target
-            full_conversation = input_messages + [{"role": "assistant", "content": ground_truth_response}]
-            
-            # Process inputs for training
-            input_text = self.llama_processor.apply_chat_template(
-                full_conversation, 
-                add_generation_prompt=False  # We want the full conversation including response
-            )
-            
-            # Process both image and text
-            inputs = self.llama_processor(
-                image,
-                input_text,
-                add_special_tokens=False,
-                return_tensors="pt"
-            ).to(self.llama_model.device)
-            
-            # Create labels (same as input_ids for causal LM)
-            labels = inputs['input_ids'].clone()
-            
-            # Find the assistant response start to mask previous tokens
-            # We only want to compute loss on the assistant's response
-            input_text_tokens = self.llama_processor.tokenizer.encode(
-                self.llama_processor.apply_chat_template(input_messages, add_generation_prompt=True),
-                add_special_tokens=False
-            )
-            assistant_start_idx = len(input_text_tokens)
-            
-            # Mask tokens before assistant response (set to -100 to ignore in loss)
-            if assistant_start_idx < labels.shape[1]:
-                labels[:, :assistant_start_idx] = -100
-            
-            # Forward pass
-            with torch.amp.autocast():  # Use mixed precision for efficiency
-                outputs = self.llama_model(
-                    input_ids=inputs['input_ids'],
-                    attention_mask=inputs.get('attention_mask'),
-                    pixel_values=inputs.get('pixel_values'),  # Vision input
-                    aspect_ratio_ids=inputs.get('aspect_ratio_ids'),  # Llama-specific
-                    aspect_ratio_mask=inputs.get('aspect_ratio_mask'),  # Llama-specific
-                    labels=labels
-                )
-                loss = outputs.loss
-            
-            # Backward pass
-            loss.backward()
-            
-            # Gradient clipping to prevent exploding gradients
-            torch.nn.utils.clip_grad_norm_(self.llama_model.parameters(), max_norm=1.0)
-            
-            # Update parameters using optimizer
-            self.llama_optimizer.step()
-            
-            # Zero gradients for next iteration
-            self.llama_optimizer.zero_grad()
-            
-            # Set model back to eval mode
-            self.llama_model.eval()
-
-            # Checkpoint saving logic
-            self.training_step += 1
-            if self.training_step % self.save_every == 0:
-                checkpoint_path = os.path.join(self.checkpoint_dir, "llama", f"step_{self.training_step}")
-                os.makedirs(checkpoint_path, exist_ok=True)
-                
-                # Save model and optimizer
-                self.llama_model.save_pretrained(checkpoint_path)
-                torch.save(self.llama_optimizer.state_dict(), os.path.join(checkpoint_path, "optimizer.pt"))
-            
-        except Exception as e:
-            # Ensure model is back in eval mode even if training fails
-            self.llama_model.eval()
-            # Clear any accumulated gradients
-            self.llama_optimizer.zero_grad()
-            # Clear CUDA cache to prevent memory issues
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
-            raise e
-
-
-    def _train_adapted_mistral(self, original_prompt, original_HLP, synthetic_HLP):
-        """
-        Perform online training of adapted Mistral model to align HLPs.
-        
-        Args:
-            original_prompt: The original input prompt that generated the HLP
-            original_HLP: HLP generated by the adapted model (for comparison/logging)
-            synthetic_HLP: More preference aligned HLP (target for training)
-        """
-        try:
-            # Proactively clear memory
-            gc.collect()
-            torch.cuda.empty_cache()
-
-            # Set model to training mode
-            self.mistral_model.train()
-
-            # Ensure only adapter layers are trainable (if using LoRA/adapter approach)
-            for name, param in self.mistral_model.named_parameters():
-                if 'adapt' not in name.lower():
-                    param.requires_grad = False
-                else:
-                    param.requires_grad = True
-
-            # Print trainable parameters
-            trainable_params = sum(p.numel() for p in self.mistral_model.parameters() if p.requires_grad)
-            total_params = sum(p.numel() for p in self.mistral_model.parameters())
-            
-            print("Trainable layers:")
-            for name, param in self.mistral_model.named_parameters():
-                if param.requires_grad:
-                    print(f"  {name}: {param.numel():,} parameters")
-
-            print(f"Trainable parameters: {trainable_params:,} / {total_params:,}")
-            percent = (trainable_params / total_params) * 100 if total_params > 0 else 0
-            print(f"Trainable parameters percentage: ({percent:.2f}%)")
-
-            # Zero gradients before training
-            self.mistral_optimizer.zero_grad()
-            
-            # Convert HLP lists to formatted strings
-            original_HLP_str = self._format_hlp_for_training(original_HLP)
-            synthetic_HLP_str = self._format_hlp_for_training(synthetic_HLP)
-            
-            # Prepare the training conversation using the synthetic HLP as target
-            training_messages = [
-                {"role": "user", "content": original_prompt},
-                {"role": "assistant", "content": synthetic_HLP_str}
-            ]
-            
-            
-            # Tokenize the full conversation
-            tokenized = self.mistral_tokenizer.apply_chat_template(
-                training_messages,
-                return_tensors="pt",
-                padding=True,
-                add_generation_prompt=False
-            ).to(self.mistral_model.device)
-            
-            # Prepare input and target
-            input_ids = tokenized
-            target_ids = tokenized.clone()
-            
-            # Find where the assistant response starts to mask input tokens
-            user_input_tokens = self.mistral_tokenizer.apply_chat_template(
-                [{"role": "user", "content": original_prompt}],
-                return_tensors="pt",
-                add_generation_prompt=True
-            ).to(self.mistral_model.device)
-            
-            # Mask tokens before assistant response (set to -100 to ignore in loss)
-            mask_length = user_input_tokens.shape[1]
-            if mask_length < target_ids.shape[1]:
-                target_ids[:, :mask_length] = -100
-            
-            # Create attention mask
-            attention_mask = torch.ones_like(input_ids)
-
-            print("before passing through mistral model ")
-            # Forward pass with mixed precision
-            # with torch.amp.autocast(device_type="cuda"):
-            outputs = self.mistral_model(
-                input_ids=input_ids,
-                attention_mask=attention_mask,
-                labels=target_ids, 
-                
-            )
-            # print('output:', target_ids)
-            loss = outputs.loss
-                # print(loss)
-            
-            print(f"[TRAINING] Loss: {loss.item():.4f}")
-            
-            # Store training metrics
-            training_metrics = {
-                "step": self.training_step + 1,
-                "loss": loss.item(),
-                "original_prompt": original_prompt,
-                "original_hlp": original_HLP_str,
-                "target_hlp": synthetic_HLP_str,
-                "original_hlp_list": original_HLP,
-                "target_hlp_list": synthetic_HLP
-            }
-            
-            # Save training metrics to file
-            self._save_training_metrics(training_metrics)
-            
-            # Backward pass
-            loss.backward()
-            
-            # Gradient clipping to prevent exploding gradients
-            torch.nn.utils.clip_grad_norm_(
-                [p for p in self.mistral_model.parameters() if p.requires_grad], 
-                max_norm=1.0
-            )
-            
-            # Update parameters using optimizer
-            self.mistral_optimizer.step()
-            
-            # Zero gradients for next iteration
-            self.mistral_optimizer.zero_grad()
-            
-            # Set model back to eval mode
-            self.mistral_model.eval()
-
-            # Checkpoint saving logic
-            self.training_step += 1
-            if self.training_step % self.save_every == 0:
-                checkpoint_path = os.path.join(
-                    self.checkpoint_dir, "mistral_adapted", f"step_{self.training_step}"
-                )
-                os.makedirs(checkpoint_path, exist_ok=True)
-                
-                # Save model and optimizer
-                self.mistral_model.save_pretrained(checkpoint_path)
-                torch.save(
-                    self.mistral_optimizer.state_dict(), 
-                    os.path.join(checkpoint_path, "optimizer.pt")
-                )
-                
-                log.info(f"Checkpoint saved at step {self.training_step}")
-            
-        except Exception as e:
-            # Ensure model is back in eval mode even if training fails
-            self.mistral_model.eval()
-            # Clear any accumulated gradients
-            self.mistral_optimizer.zero_grad()
-            # Clear CUDA cache to prevent memory issues
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
-            log.error(f"Training failed: {str(e)}")
-            raise e
 
     def _train_adapted_gemma_2(self, original_prompt, original_HLP, synthetic_HLP):
         """
